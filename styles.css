@@ -1,0 +1,818 @@
+/* ========================================
+   Raymah Café - Premium Styles
+   "From Bean to Brew"
+   ======================================== */
+
+/* ----------------------------------------
+   Base & Reset
+   ---------------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #0a0a0a;
+    color: #f5f0e8;
+    overflow-x: hidden;
+}
+
+/* Selection Color */
+::selection {
+    background: rgba(212, 175, 55, 0.3);
+    color: #fff;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #d4af37, #b8860b);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #f4cf47, #d4af37);
+}
+
+/* ----------------------------------------
+   Preloader
+   ---------------------------------------- */
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+
+.preloader.loaded {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.preloader-logo {
+    width: 150px;
+    height: auto;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.preloader-text {
+    margin-top: 2rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    color: #d4af37;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    animation: fadeInOut 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3)); }
+    50% { transform: scale(1.02); filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.6)); }
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* ----------------------------------------
+   Custom Cursor
+   ---------------------------------------- */
+.cursor-dot {
+    width: 8px;
+    height: 8px;
+    background: #d4af37;
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s ease;
+    mix-blend-mode: difference;
+}
+
+.cursor-outline {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.15s ease-out;
+    transform: translate(-50%, -50%);
+}
+
+.cursor-outline.hover {
+    width: 60px;
+    height: 60px;
+    border-color: #d4af37;
+    background: rgba(212, 175, 55, 0.1);
+}
+
+@media (hover: none), (max-width: 768px) {
+    .cursor-dot, .cursor-outline {
+        display: none !important;
+    }
+}
+
+/* ----------------------------------------
+   Grain Overlay Effect
+   ---------------------------------------- */
+.grain-overlay::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* ----------------------------------------
+   Hero Section
+   ---------------------------------------- */
+.hero-section {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d0d0d 100%);
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(ellipse at 20% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(184, 134, 11, 0.06) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 50%, rgba(212, 175, 55, 0.03) 0%, transparent 60%);
+    pointer-events: none;
+    animation: ambientGlow 8s ease-in-out infinite alternate;
+}
+
+@keyframes ambientGlow {
+    0% { opacity: 1; }
+    100% { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* Animated Background Particles */
+.particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(212, 175, 55, 0.4);
+    border-radius: 50%;
+    animation: floatParticle 20s infinite linear;
+}
+
+@keyframes floatParticle {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* ----------------------------------------
+   Typography & Hero Title
+   ---------------------------------------- */
+.hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    background: linear-gradient(135deg, #f5f0e8 0%, #d4af37 30%, #f5f0e8 50%, #d4af37 70%, #f5f0e8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s ease-in-out infinite;
+    background-size: 300% 100%;
+}
+
+@keyframes shimmer {
+    0% { background-position: 100% 50%; }
+    50% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+/* ----------------------------------------
+   Logo Styles
+   ---------------------------------------- */
+.logo-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-image {
+    height: 55px;
+    width: auto;
+    transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1), filter 0.4s ease;
+    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+}
+
+.logo-container:hover .logo-image {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.6));
+}
+
+.hero-logo {
+    width: 320px;
+    height: auto;
+    max-width: 85vw;
+    filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.4));
+    animation: logoGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+    0% { filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.3)); transform: scale(1); }
+    100% { filter: drop-shadow(0 0 50px rgba(212, 175, 55, 0.6)); transform: scale(1.02); }
+}
+
+/* ----------------------------------------
+   Floating Animation
+   ---------------------------------------- */
+.float-element {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+/* ----------------------------------------
+   Steam Animation - Enhanced Gold
+   ---------------------------------------- */
+.steam {
+    position: absolute;
+    width: 10px;
+    height: 120px;
+    background: linear-gradient(to top, rgba(212, 175, 55, 0), rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0));
+    border-radius: 50%;
+    filter: blur(10px);
+    animation: steam 3.5s ease-out infinite;
+}
+
+@keyframes steam {
+    0% { opacity: 0; transform: translateY(0) scaleX(1); }
+    15% { opacity: 0.7; }
+    50% { opacity: 0.4; transform: translateY(-60px) scaleX(2); }
+    100% { opacity: 0; transform: translateY(-120px) scaleX(3); }
+}
+
+/* ----------------------------------------
+   Navigation
+   ---------------------------------------- */
+.nav-link {
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #d4af37, transparent);
+    transform: translateX(-101%);
+    transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.nav-link:hover::after {
+    transform: translateX(0);
+}
+
+.navbar-scrolled {
+    background: rgba(10, 10, 10, 0.95) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+/* ----------------------------------------
+   Buttons - Gold Theme
+   ---------------------------------------- */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    border: 1px solid #d4af37;
+    color: #d4af37;
+    padding: 1rem 2.5rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    transition: all 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+    z-index: 1;
+    cursor: pointer;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #d4af37, #b8860b);
+    transform: translateY(101%);
+    transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+    z-index: -1;
+}
+
+.btn-primary:hover::before {
+    transform: translateY(0);
+}
+
+.btn-primary:hover {
+    color: #0a0a0a;
+    box-shadow: 0 10px 40px rgba(212, 175, 55, 0.3);
+}
+
+/* ----------------------------------------
+   Product Cards - Dark Theme
+   ---------------------------------------- */
+.product-card {
+    background: linear-gradient(145deg, #141414, #0a0a0a);
+    border: 1px solid rgba(212, 175, 55, 0.1);
+    border-radius: 0;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.product-card:hover {
+    transform: translateY(-10px);
+    border-color: rgba(212, 175, 55, 0.4);
+    box-shadow: 0 20px 60px rgba(212, 175, 55, 0.15);
+}
+
+.product-image {
+    overflow: hidden;
+    aspect-ratio: 4/5;
+    position: relative;
+}
+
+.product-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 60%, rgba(10, 10, 10, 0.9));
+    pointer-events: none;
+}
+
+/* ----------------------------------------
+   Section Divider - Gold
+   ---------------------------------------- */
+.section-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #d4af37, transparent);
+}
+
+/* ----------------------------------------
+   Marquee Animation
+   ---------------------------------------- */
+.marquee-container {
+    overflow: hidden;
+    white-space: nowrap;
+    border-top: 1px solid rgba(212, 175, 55, 0.1);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.marquee-content {
+    display: inline-block;
+    animation: marquee 35s linear infinite;
+}
+
+.marquee-content:hover {
+    animation-play-state: paused;
+}
+
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* ----------------------------------------
+   Testimonial Cards - Dark Luxury
+   ---------------------------------------- */
+.testimonial-card {
+    background: linear-gradient(145deg, #141414 0%, #0a0a0a 100%);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+}
+
+.testimonial-card:hover {
+    border-color: rgba(212, 175, 55, 0.4);
+    box-shadow: 0 20px 60px rgba(212, 175, 55, 0.1);
+}
+
+.testimonial-card::before {
+    content: '"';
+    position: absolute;
+    top: 1rem;
+    left: 2rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 8rem;
+    color: rgba(212, 175, 55, 0.1);
+    line-height: 1;
+}
+
+/* ----------------------------------------
+   Footer Pattern
+   ---------------------------------------- */
+.footer-pattern {
+    background: #0a0a0a;
+    background-image: 
+        radial-gradient(circle at 25% 25%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(184, 134, 11, 0.03) 0%, transparent 50%);
+}
+
+/* ----------------------------------------
+   Scroll Indicator
+   ---------------------------------------- */
+.scroll-indicator {
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(10px); }
+}
+
+/* ----------------------------------------
+   Gold Accent Text
+   ---------------------------------------- */
+.text-gold {
+    color: #d4af37;
+}
+
+.text-gold-gradient {
+    background: linear-gradient(135deg, #d4af37, #f4cf47, #d4af37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ----------------------------------------
+   Feature Icons - Animated
+   ---------------------------------------- */
+.feature-icon {
+    position: relative;
+    transition: all 0.4s ease;
+}
+
+.feature-icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    transform: translate(-50%, -50%) scale(1);
+    transition: all 0.4s ease;
+    opacity: 0;
+}
+
+.feature-icon:hover::after {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 1;
+}
+
+/* ----------------------------------------
+   Mobile Menu Overlay
+   ---------------------------------------- */
+.mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 10, 0.98);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease;
+}
+
+.mobile-menu.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-menu a {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    color: #f5f0e8;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.mobile-menu a:hover {
+    color: #d4af37;
+}
+
+.mobile-menu-close {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    background: none;
+    border: none;
+    color: #f5f0e8;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.mobile-menu-close:hover {
+    color: #d4af37;
+}
+
+/* ----------------------------------------
+   Form Inputs - Dark Theme
+   ---------------------------------------- */
+input:focus {
+    outline: none;
+}
+
+input::placeholder {
+    color: rgba(245, 240, 232, 0.4);
+}
+
+.newsletter-input {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(212, 175, 55, 0.2) !important;
+    transition: all 0.3s ease;
+}
+
+.newsletter-input:focus {
+    border-color: #d4af37 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+}
+
+/* ----------------------------------------
+   Stats Counter Animation
+   ---------------------------------------- */
+.stat-number {
+    font-family: 'Cormorant Garamond', serif;
+    background: linear-gradient(135deg, #d4af37, #f4cf47);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ----------------------------------------
+   Notification Toast
+   ---------------------------------------- */
+.notification {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #141414, #0a0a0a);
+    color: #f5f0e8;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.875rem;
+    z-index: 9999;
+    border-left: 3px solid #d4af37;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ----------------------------------------
+   Parallax Section
+   ---------------------------------------- */
+.parallax-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.parallax-bg {
+    position: absolute;
+    top: -20%;
+    left: 0;
+    width: 100%;
+    height: 140%;
+    background-size: cover;
+    background-position: center;
+    will-change: transform;
+}
+
+/* ----------------------------------------
+   Glow Effects
+   ---------------------------------------- */
+.glow-gold {
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+}
+
+.glow-gold-hover:hover {
+    box-shadow: 0 0 50px rgba(212, 175, 55, 0.5);
+}
+
+/* ----------------------------------------
+   Responsive Adjustments
+   ---------------------------------------- */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: clamp(2rem, 10vw, 3.5rem);
+    }
+    
+    .testimonial-card {
+        padding: 2rem;
+    }
+    
+    .testimonial-card::before {
+        font-size: 5rem;
+        left: 1rem;
+    }
+    
+    .hero-logo {
+        width: 220px;
+    }
+}
+
+@media (max-width: 640px) {
+    .btn-primary {
+        padding: 0.875rem 2rem;
+        font-size: 0.7rem;
+    }
+    
+    .logo-image {
+        height: 45px;
+    }
+}
+
+/* ----------------------------------------
+   Cart Sidebar Styles
+   ---------------------------------------- */
+#cartSidebar {
+    box-shadow: -10px 0 50px rgba(0, 0, 0, 0.5);
+}
+
+.cart-item {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.qty-btn:active {
+    transform: scale(0.95);
+}
+
+/* ----------------------------------------
+   Review Card Styles
+   ---------------------------------------- */
+.review-card {
+    animation: fadeUp 0.5s ease-out;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Star Rating Hover Effect */
+.star-btn {
+    transition: all 0.2s ease;
+}
+
+.star-btn:hover {
+    transform: scale(1.2);
+}
+
+/* ----------------------------------------
+   Form Input Focus States
+   ---------------------------------------- */
+#reviewForm input:focus,
+#reviewForm textarea:focus {
+    border-color: #d4af37;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+}
+
+/* ----------------------------------------
+   Cart Count Badge Animation
+   ---------------------------------------- */
+#cartCount {
+    animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+    }
+    80% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ----------------------------------------
+   Checkout Button Hover
+   ---------------------------------------- */
+#checkoutBtn {
+    background-size: 200% 100%;
+    background-position: left center;
+    transition: all 0.4s ease;
+}
+
+#checkoutBtn:hover {
+    background-position: right center;
+}
