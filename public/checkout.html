@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Raymah Café</title>
+    <meta name="description" content="Complete your order at Raymah Café">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        black: '#0a0a0a',
+                        dark: '#141414',
+                        gold: '#d4af37',
+                        'gold-light': '#f4cf47',
+                        'gold-dark': '#b8860b',
+                        cream: '#f5f0e8',
+                        latte: '#e8dfd3',
+                    },
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'serif'],
+                        sans: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Checkout Styles -->
+    <link rel="stylesheet" href="checkout.css">
+
+</head>
+<body>
+    <!-- Header -->
+    <header class="border-b border-gold/10">
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 py-5">
+            <div class="flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-3 group">
+                    <img src="logo.jpg" alt="Raymah Café" class="h-12 transition-transform group-hover:scale-105">
+                </a>
+                
+                <!-- Steps Indicator (Desktop) -->
+                <div class="hidden md:flex items-center gap-8">
+                    <div class="step completed" data-step="1">
+                        <div class="step-number">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <span class="text-sm">Cart</span>
+                    </div>
+                    <div class="w-12 h-px bg-gold/20"></div>
+                    <div class="step active" data-step="2">
+                        <div class="step-number">2</div>
+                        <span class="text-sm">Checkout</span>
+                    </div>
+                    <div class="w-12 h-px bg-gold/20"></div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <span class="text-sm">Confirmation</span>
+                    </div>
+                </div>
+                
+                <a href="index.html" class="text-cream/50 hover:text-gold text-sm transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to Menu
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 lg:px-12 py-12">
+        <div class="grid lg:grid-cols-3 gap-12">
+            
+            <!-- Checkout Form -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Empty Cart Message (hidden by default) -->
+                <div id="emptyCartMessage" class="empty-cart-message hidden">
+                    <svg class="w-20 h-20 text-gold/20 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                    <h2 class="font-serif text-2xl text-cream mb-3">Your cart is empty</h2>
+                    <p class="text-cream/50 mb-6">Add some delicious coffee before checkout</p>
+                    <a href="index.html#collection" class="btn-secondary inline-block">Browse Menu</a>
+                </div>
+                
+                <!-- Checkout Form Container -->
+                <div id="checkoutFormContainer">
+                    <h1 class="font-serif text-4xl text-cream mb-2">Checkout</h1>
+                    <p class="text-cream/50 mb-8">Complete your order</p>
+                    
+                    <form id="checkoutForm" class="space-y-10">
+                        
+                        <!-- Section 1: Order Type -->
+                        <section class="animate-fade-in">
+                            <h2 class="font-serif text-xl text-cream mb-1">Order Type</h2>
+                            <p class="text-cream/40 text-sm mb-6">How would you like to receive your order?</p>
+                            
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <label class="radio-card">
+                                    <input type="radio" name="orderType" value="delivery" checked>
+                                    <div class="card-content flex items-start gap-4">
+                                        <div class="radio-indicator"></div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                </svg>
+                                                <span class="text-cream font-medium">Delivery</span>
+                                            </div>
+                                            <p class="text-cream/40 text-sm">30-45 min • $4.99 fee</p>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-card">
+                                    <input type="radio" name="orderType" value="pickup">
+                                    <div class="card-content flex items-start gap-4">
+                                        <div class="radio-indicator"></div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                                </svg>
+                                                <span class="text-cream font-medium">Pickup</span>
+                                            </div>
+                                            <p class="text-cream/40 text-sm">15-20 min • Free</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </section>
+                        
+                        <!-- Section 2: Contact Information -->
+                        <section class="animate-fade-in" style="animation-delay: 0.1s">
+                            <h2 class="font-serif text-xl text-cream mb-1">Contact Information</h2>
+                            <p class="text-cream/40 text-sm mb-6">We'll use this to send you order updates</p>
+                            
+                            <div class="grid sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="form-label" for="firstName">First Name *</label>
+                                    <input type="text" id="firstName" name="firstName" class="form-input" placeholder="John" required>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="lastName">Last Name *</label>
+                                    <input type="text" id="lastName" name="lastName" class="form-input" placeholder="Doe" required>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="email">Email *</label>
+                                    <input type="email" id="email" name="email" class="form-input" placeholder="john@example.com" required>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="phone">Phone *</label>
+                                    <input type="tel" id="phone" name="phone" class="form-input" placeholder="(555) 123-4567" required>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <!-- Section 3: Delivery Address (shown only for delivery) -->
+                        <section id="deliverySection" class="animate-fade-in" style="animation-delay: 0.2s">
+                            <h2 class="font-serif text-xl text-cream mb-1">Delivery Address</h2>
+                            <p class="text-cream/40 text-sm mb-6">Where should we deliver your order?</p>
+                            
+                            <div class="space-y-5">
+                                <div>
+                                    <label class="form-label" for="address">Street Address *</label>
+                                    <input type="text" id="address" name="address" class="form-input" placeholder="123 Main Street" required>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="apartment">Apartment, Suite, etc. (optional)</label>
+                                    <input type="text" id="apartment" name="apartment" class="form-input" placeholder="Apt 4B">
+                                </div>
+                                <div class="grid sm:grid-cols-3 gap-5">
+                                    <div>
+                                        <label class="form-label" for="city">City *</label>
+                                        <input type="text" id="city" name="city" class="form-input" placeholder="New York" required>
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="state">State *</label>
+                                        <input type="text" id="state" name="state" class="form-input" placeholder="NY" required>
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="zip">ZIP Code *</label>
+                                        <input type="text" id="zip" name="zip" class="form-input" placeholder="10001" required>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="deliveryInstructions">Delivery Instructions (optional)</label>
+                                    <textarea id="deliveryInstructions" name="deliveryInstructions" class="form-input" rows="2" placeholder="Ring doorbell, leave at door, etc."></textarea>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <!-- Section 3b: Pickup Location (shown only for pickup) -->
+                        <section id="pickupSection" class="hidden animate-fade-in">
+                            <h2 class="font-serif text-xl text-cream mb-1">Pickup Location</h2>
+                            <p class="text-cream/40 text-sm mb-6">Your order will be ready for pickup at:</p>
+                            
+                            <div class="bg-dark border border-gold/20 p-6">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-12 h-12 bg-gold/10 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-cream font-medium mb-1">Raymah Café - Downtown</h3>
+                                        <p class="text-cream/50 text-sm mb-2">123 Coffee Lane, Downtown District</p>
+                                        <p class="text-cream/40 text-sm">Open until 10:00 PM</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-5">
+                                <label class="form-label" for="pickupTime">Preferred Pickup Time</label>
+                                <select id="pickupTime" name="pickupTime" class="form-input">
+                                    <option value="asap">As soon as possible (15-20 min)</option>
+                                    <option value="30">In 30 minutes</option>
+                                    <option value="60">In 1 hour</option>
+                                    <option value="schedule">Schedule for later</option>
+                                </select>
+                            </div>
+                        </section>
+                        
+                        <!-- Section 4: Payment -->
+                        <section class="animate-fade-in" style="animation-delay: 0.3s">
+                            <div class="flex items-center justify-between mb-6">
+                                <div>
+                                    <h2 class="font-serif text-xl text-cream mb-1">Payment Method</h2>
+                                    <p class="text-cream/40 text-sm">All transactions are secure and encrypted</p>
+                                </div>
+                                <div class="secure-badge">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                    Secure
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Method Tabs -->
+                            <div class="flex gap-2 mb-6">
+                                <button type="button" class="payment-tab active" data-method="card">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                        </svg>
+                                        Card
+                                    </span>
+                                </button>
+                                <button type="button" class="payment-tab" data-method="paypal">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/>
+                                        </svg>
+                                        PayPal
+                                    </span>
+                                </button>
+                                <button type="button" class="payment-tab" data-method="applepay">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                                        </svg>
+                                        Apple Pay
+                                    </span>
+                                </button>
+                            </div>
+                            
+                            <!-- Card Payment Form -->
+                            <div id="cardPayment" class="space-y-5">
+                                <div>
+                                    <label class="form-label" for="cardName">Name on Card *</label>
+                                    <input type="text" id="cardName" name="cardName" class="form-input" placeholder="John Doe" required>
+                                </div>
+                                <div>
+                                    <label class="form-label" for="cardNumber">Card Number *</label>
+                                    <div class="relative">
+                                        <input type="text" id="cardNumber" name="cardNumber" class="form-input pr-12" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                                        <div class="absolute right-4 top-1/2 -translate-y-1/2 flex gap-1">
+                                            <svg class="w-8 h-5 text-cream/30" viewBox="0 0 32 20" fill="currentColor">
+                                                <rect width="32" height="20" rx="2" fill="currentColor" opacity="0.2"/>
+                                                <circle cx="12" cy="10" r="6" fill="#EB001B" opacity="0.8"/>
+                                                <circle cx="20" cy="10" r="6" fill="#F79E1B" opacity="0.8"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-input-group">
+                                    <div>
+                                        <label class="form-label" for="expiry">Expiry Date *</label>
+                                        <input type="text" id="expiry" name="expiry" class="form-input" placeholder="MM/YY" maxlength="5" required>
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="cvv">CVV *</label>
+                                        <input type="text" id="cvv" name="cvv" class="form-input" placeholder="123" maxlength="4" required>
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="billingZip">Billing ZIP *</label>
+                                        <input type="text" id="billingZip" name="billingZip" class="form-input" placeholder="10001" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- PayPal Payment -->
+                            <div id="paypalPayment" class="hidden text-center py-8">
+                                <p class="text-cream/60 mb-4">You will be redirected to PayPal to complete your payment securely.</p>
+                                <div class="inline-flex items-center gap-2 px-6 py-3 bg-[#0070ba] text-white rounded">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"/>
+                                    </svg>
+                                    Pay with PayPal
+                                </div>
+                            </div>
+                            
+                            <!-- Apple Pay -->
+                            <div id="applepayPayment" class="hidden text-center py-8">
+                                <p class="text-cream/60 mb-4">Click below to pay with Apple Pay.</p>
+                                <div class="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                                    </svg>
+                                    Apple Pay
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <!-- Section 5: Tip -->
+                        <section class="animate-fade-in" style="animation-delay: 0.4s">
+                            <h2 class="font-serif text-xl text-cream mb-1">Add a Tip</h2>
+                            <p class="text-cream/40 text-sm mb-6">Show your appreciation for our baristas</p>
+                            
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" class="tip-btn" data-tip="0">No Tip</button>
+                                <button type="button" class="tip-btn" data-tip="15">15%</button>
+                                <button type="button" class="tip-btn active" data-tip="18">18%</button>
+                                <button type="button" class="tip-btn" data-tip="20">20%</button>
+                                <button type="button" class="tip-btn" data-tip="25">25%</button>
+                                <button type="button" class="tip-btn" data-tip="custom">Custom</button>
+                            </div>
+                            
+                            <div id="customTipInput" class="mt-4 hidden">
+                                <label class="form-label" for="customTip">Enter custom tip amount</label>
+                                <div class="relative w-40">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-cream/50">$</span>
+                                    <input type="number" id="customTip" name="customTip" class="form-input pl-8" placeholder="0.00" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <input type="hidden" id="tipAmount" name="tipAmount" value="18">
+                        </section>
+                        
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Order Summary Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-dark border border-gold/20 p-6 sticky top-6">
+                    <h2 class="font-serif text-xl text-cream mb-6">Order Summary</h2>
+                    
+                    <!-- Cart Items -->
+                    <div id="checkoutItems" class="mb-6 max-h-64 overflow-y-auto">
+                        <!-- Items loaded dynamically -->
+                    </div>
+                    
+                    <!-- Promo Code -->
+                    <div class="mb-6 pb-6 border-b border-gold/10">
+                        <label class="form-label">Promo Code</label>
+                        <div class="promo-input-group">
+                            <input type="text" id="promoCode" class="form-input flex-1" placeholder="Enter code">
+                            <button type="button" id="applyPromo" class="btn-secondary px-4 py-3">Apply</button>
+                        </div>
+                        <p id="promoMessage" class="text-sm mt-2 hidden"></p>
+                    </div>
+                    
+                    <!-- Order Totals -->
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-cream/60 text-sm">
+                            <span>Subtotal</span>
+                            <span id="summarySubtotal">$0.00</span>
+                        </div>
+                        <div class="flex justify-between text-cream/60 text-sm" id="deliveryFeeRow">
+                            <span>Delivery Fee</span>
+                            <span id="summaryDelivery">$4.99</span>
+                        </div>
+                        <div class="flex justify-between text-cream/60 text-sm" id="discountRow" style="display: none;">
+                            <span>Discount</span>
+                            <span id="summaryDiscount" class="text-green-500">-$0.00</span>
+                        </div>
+                        <div class="flex justify-between text-cream/60 text-sm">
+                            <span>Tax (8.875%)</span>
+                            <span id="summaryTax">$0.00</span>
+                        </div>
+                        <div class="flex justify-between text-cream/60 text-sm">
+                            <span>Tip</span>
+                            <span id="summaryTip">$0.00</span>
+                        </div>
+                        <div class="flex justify-between text-cream font-semibold text-lg pt-3 border-t border-gold/10">
+                            <span>Total</span>
+                            <span id="summaryTotal" class="text-gold">$0.00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Place Order Button -->
+                    <button type="submit" form="checkoutForm" class="btn-primary" id="placeOrderBtn">
+                        Place Order
+                    </button>
+                    
+                    <!-- Security Note -->
+                    <p class="text-cream/30 text-xs text-center mt-4 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        Secure checkout powered by SSL encryption
+                    </p>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+    
+    <!-- Order Confirmation Modal -->
+    <div id="confirmationModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/90" id="modalOverlay"></div>
+        <div class="relative bg-dark border border-gold/30 p-8 max-w-md w-full text-center animate-fade-in">
+            <div class="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <h2 class="font-serif text-3xl text-cream mb-3">Order Confirmed!</h2>
+            <p class="text-cream/60 mb-2">Thank you for your order</p>
+            <p class="text-gold text-lg font-medium mb-6" id="orderNumber">Order #12345</p>
+            <p class="text-cream/50 text-sm mb-8" id="confirmationMessage">
+                You will receive an email confirmation shortly. Your order will be ready in approximately 30-45 minutes.
+            </p>
+            <div class="space-y-3">
+                <a href="index.html" class="btn-primary block">Back to Home</a>
+                <button id="closeModal" class="btn-secondary w-full">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="checkout.js"></script>
+</body>
+</html>
