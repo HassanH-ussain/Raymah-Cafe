@@ -1,6 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { sendOrderReceipt } = require('../services/email');
+
+// POST /api/orders/create-payment-intent — create a Stripe PaymentIntent
+router.post('/create-payment-intent', async (req, res, next) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid amount' });
+    }
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // cents
+      currency: 'usd',
+      automatic_payment_methods: { enabled: true },
+    });
+    res.json({ success: true, clientSecret: paymentIntent.client_secret });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // POST /api/orders — place a new order
 router.post('/', async (req, res, next) => {
@@ -16,6 +36,11 @@ router.post('/', async (req, res, next) => {
         total: order.pricing.total,
       },
     });
+
+    // Fire-and-forget — email failure must never affect the order response
+    sendOrderReceipt(order).catch(err =>
+      console.error(`[email] Receipt failed for order ${order.orderNumber}:`, err.message)
+    );
   } catch (err) {
     next(err);
   }

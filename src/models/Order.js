@@ -54,6 +54,7 @@ const orderSchema = new mongoose.Schema(
       total: { type: Number, required: true },
     },
     promoCode: { type: String, default: '' },
+    stripePaymentIntentId: { type: String },
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'],

@@ -23,6 +23,53 @@ const PROMO_CODES = {
 };
 
 // ----------------------------------------
+// Stripe — initialised after fetching publishable key from /api/config
+// ----------------------------------------
+let stripe = null;
+let cardElement = null;
+
+async function initStripe() {
+    try {
+        const res = await fetch(`${API_BASE}/config`);
+        const { stripePublishableKey } = await res.json();
+        if (!stripePublishableKey) throw new Error('Stripe publishable key not configured');
+
+        stripe = Stripe(stripePublishableKey);
+        const elements = stripe.elements();
+
+        cardElement = elements.create('card', {
+            style: {
+                base: {
+                    color: '#f5f0e8',
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: '14px',
+                    '::placeholder': { color: 'rgba(245, 240, 232, 0.3)' },
+                    iconColor: '#d4af37',
+                },
+                invalid: {
+                    color: '#ef4444',
+                    iconColor: '#ef4444',
+                },
+            },
+        });
+
+        cardElement.mount('#card-element');
+
+        cardElement.on('change', e => {
+            const errEl = document.getElementById('card-errors');
+            if (e.error) {
+                errEl.textContent = e.error.message;
+                errEl.classList.remove('hidden');
+            } else {
+                errEl.classList.add('hidden');
+            }
+        });
+    } catch (err) {
+        console.error('Stripe init failed:', err.message);
+    }
+}
+
+// ----------------------------------------
 // Safe JSON parse (avoids crashing on corrupted localStorage)
 // ----------------------------------------
 function safeJSONParse(str, fallback) {
@@ -176,6 +223,7 @@ function collectOrderData() {
 // ----------------------------------------
 document.addEventListener('DOMContentLoaded', function () {
     loadCart();
+    initStripe();
 
     // Order type toggle
     document.querySelectorAll('input[name="orderType"]').forEach(radio => {
@@ -205,7 +253,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('cardPayment')?.classList.toggle('hidden', method !== 'card');
             document.getElementById('paypalPayment')?.classList.toggle('hidden', method !== 'paypal');
             document.getElementById('applepayPayment')?.classList.toggle('hidden', method !== 'applepay');
-            document.querySelectorAll('#cardPayment input').forEach(input => { input.required = method === 'card'; });
         });
     });
 
@@ -255,19 +302,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Card number formatting
-    document.getElementById('cardNumber')?.addEventListener('input', e => {
-        let v = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
-        e.target.value = v.match(/.{1,4}/g)?.join(' ') || v;
-    });
-
-    // Expiry formatting
-    document.getElementById('expiry')?.addEventListener('input', e => {
-        let v = e.target.value.replace(/\D/g, '');
-        if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2);
-        e.target.value = v;
-    });
-
     // Phone formatting
     document.getElementById('phone')?.addEventListener('input', e => {
         let v = e.target.value.replace(/\D/g, '');
@@ -276,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
         e.target.value = v;
     });
 
-    // Form submission → POST to /api/orders
+    // Form submission — Stripe payment flow
     document.getElementById('checkoutForm')?.addEventListener('submit', async e => {
         e.preventDefault();
 
@@ -284,9 +318,44 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.disabled = true;
         btn.textContent = 'Processing...';
 
+        const activeTab = document.querySelector('.payment-tab.active');
+        const paymentMethod = activeTab?.dataset.method || 'card';
+
         try {
             const orderData = collectOrderData();
 
+            if (paymentMethod === 'card') {
+                if (!stripe || !cardElement) throw new Error('Payment system not ready. Please refresh and try again.');
+
+                // Step 1: Create a PaymentIntent on the server
+                btn.textContent = 'Contacting payment server...';
+                const intentRes = await fetch(`${API_BASE}/orders/create-payment-intent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: orderData.pricing.total }),
+                });
+                const intentData = await intentRes.json();
+                if (!intentRes.ok || !intentData.success) throw new Error(intentData.message || 'Payment initialization failed');
+
+                // Step 2: Confirm the card payment via Stripe.js
+                btn.textContent = 'Authorizing card...';
+                const { error, paymentIntent } = await stripe.confirmCardPayment(intentData.clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: document.getElementById('cardName')?.value.trim(),
+                            email: orderData.customer.email,
+                        },
+                    },
+                });
+                if (error) throw new Error(error.message);
+
+                // Attach the payment intent ID so the backend can audit it
+                orderData.stripePaymentIntentId = paymentIntent.id;
+            }
+
+            // Step 3: Save the order to MongoDB
+            btn.textContent = 'Placing order...';
             const res = await fetch(`${API_BASE}/orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -303,14 +372,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     ? 'Your order is being prepared and will be delivered in approximately 30-45 minutes.'
                     : 'Your order will be ready for pickup in approximately 15-20 minutes.';
 
-            // Clear cart from localStorage
             localStorage.removeItem('raymahCart');
-
-            // Show modal
             document.getElementById('confirmationModal').classList.remove('hidden');
 
         } catch (err) {
-            alert(`Order failed: ${err.message}\n\nPlease check your connection and try again.`);
+            alert(`Order failed: ${err.message}\n\nPlease check your details and try again.`);
         } finally {
             btn.disabled = false;
             btn.textContent = 'Place Order';

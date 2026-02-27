@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | Raymah Café</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            black: '#0a0a0a', dark: '#141414', gold: '#d4af37',
+            'gold-light': '#f4cf47', 'gold-dark': '#b8860b',
+            cream: '#f5f0e8', latte: '#e8dfd3',
+          },
+          fontFamily: { serif: ['Cormorant Garamond', 'serif'], sans: ['Montserrat', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0a0a0a; color: #f5f0e8; font-family: 'Montserrat', sans-serif; }
+    .badge { display: inline-flex; align-items: center; padding: 2px 10px; font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 2px; }
+    .badge-pending    { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+    .badge-confirmed  { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+    .badge-preparing  { background: rgba(251,146,60,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.3); }
+    .badge-ready      { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+    .badge-delivered  { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+    .badge-cancelled  { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+    select.status-select { background-color: #1a1a1a; color: #f5f0e8; border: 1px solid rgba(212,175,55,0.2); padding: 4px 8px; font-size: 12px; font-family: 'Montserrat', sans-serif; cursor: pointer; }
+    select.status-select:focus { outline: none; border-color: #d4af37; }
+    .stat-card { background: #141414; border: 1px solid rgba(212,175,55,0.15); padding: 20px 24px; }
+    .order-row { border-bottom: 1px solid rgba(212,175,55,0.08); transition: background 0.15s; }
+    .order-row:hover { background: rgba(212,175,55,0.03); }
+    .filter-btn { padding: 6px 14px; font-size: 12px; border: 1px solid rgba(212,175,55,0.2); color: rgba(245,240,232,0.5); cursor: pointer; transition: all 0.15s; background: transparent; font-family: 'Montserrat', sans-serif; }
+    .filter-btn.active, .filter-btn:hover { border-color: #d4af37; color: #d4af37; background: rgba(212,175,55,0.08); }
+    #loginScreen { position: fixed; inset: 0; background: #0a0a0a; display: flex; align-items: center; justify-content: center; z-index: 50; }
+    .login-input { width: 100%; background: #141414; border: 1px solid rgba(212,175,55,0.2); color: #f5f0e8; padding: 12px 16px; font-family: 'Montserrat', sans-serif; font-size: 14px; }
+    .login-input:focus { outline: none; border-color: #d4af37; }
+    .btn-gold { background: #d4af37; color: #0a0a0a; padding: 12px 28px; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; border: none; width: 100%; transition: background 0.15s; }
+    .btn-gold:hover { background: #f4cf47; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #141414; } ::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); }
+  </style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="loginScreen">
+  <div style="width:100%;max-width:380px;padding:0 20px;">
+    <div style="background:#141414;border:1px solid rgba(212,175,55,0.2);padding:40px;">
+      <p style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:26px;color:#d4af37;letter-spacing:3px;margin:0 0 4px;">RAYMAH CAFÉ</p>
+      <p style="text-align:center;font-size:11px;color:rgba(245,240,232,0.4);letter-spacing:2px;text-transform:uppercase;margin:0 0 32px;">Admin Dashboard</p>
+      <label style="display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.5);margin-bottom:8px;">Admin Key</label>
+      <input type="password" id="loginKey" class="login-input" placeholder="Enter admin key" autocomplete="off">
+      <p id="loginError" style="color:#f87171;font-size:12px;margin:8px 0 0;display:none;">Invalid key. Try again.</p>
+      <button class="btn-gold" style="margin-top:20px;" onclick="login()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Dashboard ── -->
+<div id="dashboard" style="display:none;">
+
+  <!-- Header -->
+  <header style="border-bottom:1px solid rgba(212,175,55,0.1);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#0a0a0a;z-index:10;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <img src="logo.jpg" alt="Raymah Café" style="height:36px;">
+      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(212,175,55,0.6);">Admin</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <button onclick="loadDashboard()" style="background:none;border:none;color:rgba(245,240,232,0.4);font-size:12px;cursor:pointer;font-family:'Montserrat',sans-serif;" title="Refresh">↻ Refresh</button>
+      <button onclick="logout()" style="background:none;border:none;color:rgba(245,240,232,0.4);font-size:12px;cursor:pointer;font-family:'Montserrat',sans-serif;">Sign out</button>
+    </div>
+  </header>
+
+  <main style="max-width:1400px;margin:0 auto;padding:32px;">
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;">
+      <div class="stat-card">
+        <p style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.4);margin:0 0 8px;">Total Orders</p>
+        <p id="statTotal" style="font-family:'Cormorant Garamond',serif;font-size:36px;color:#f5f0e8;margin:0;">—</p>
+      </div>
+      <div class="stat-card">
+        <p style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.4);margin:0 0 8px;">Active Orders</p>
+        <p id="statPending" style="font-family:'Cormorant Garamond',serif;font-size:36px;color:#fbbf24;margin:0;">—</p>
+      </div>
+      <div class="stat-card">
+        <p style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.4);margin:0 0 8px;">Today's Revenue</p>
+        <p id="statRevenue" style="font-family:'Cormorant Garamond',serif;font-size:36px;color:#d4af37;margin:0;">—</p>
+      </div>
+    </div>
+
+    <!-- Orders Panel -->
+    <div style="background:#141414;border:1px solid rgba(212,175,55,0.15);">
+
+      <!-- Panel header + filters -->
+      <div style="padding:20px 24px;border-bottom:1px solid rgba(212,175,55,0.1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;color:#f5f0e8;margin:0;">Orders</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;" id="filterBtns">
+          <button class="filter-btn active" data-status="">All</button>
+          <button class="filter-btn" data-status="pending">Pending</button>
+          <button class="filter-btn" data-status="confirmed">Confirmed</button>
+          <button class="filter-btn" data-status="preparing">Preparing</button>
+          <button class="filter-btn" data-status="ready">Ready</button>
+          <button class="filter-btn" data-status="delivered">Delivered</button>
+          <button class="filter-btn" data-status="cancelled">Cancelled</button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(212,175,55,0.1);">
+              <th style="padding:12px 16px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);font-weight:500;">Order</th>
+              <th style="padding:12px 16px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);font-weight:500;">Customer</th>
+              <th style="padding:12px 16px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);font-weight:500;">Items</th>
+              <th style="padding:12px 16px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);font-weight:500;">Type</th>
+              <th style="padding:12px 16px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);font-weight:500;">Total</th>
+              <th style="padding:12px 16px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);font-weight:500;">Status</th>
+              <th style="padding:12px 16px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);font-weight:500;">Time</th>
+              <th style="padding:12px 16px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(245,240,232,0.35);font-weight:500;">Update</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody">
+            <tr><td colspan="8" style="padding:40px;text-align:center;color:rgba(245,240,232,0.3);font-size:13px;">Loading orders…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const API = '/api/admin';
+  let adminKey = '';
+  let activeFilter = '';
+
+  // ── Auth ──
+  function login() {
+    const key = document.getElementById('loginKey').value.trim();
+    if (!key) return;
+    adminKey = key;
+    loadDashboard().then(() => {
+      sessionStorage.setItem('adminKey', key);
+    }).catch(() => {
+      adminKey = '';
+      document.getElementById('loginError').style.display = 'block';
+    });
+  }
+
+  function logout() {
+    sessionStorage.removeItem('adminKey');
+    adminKey = '';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginKey').value = '';
+    document.getElementById('loginError').style.display = 'none';
+  }
+
+  document.getElementById('loginKey').addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+  });
+
+  // ── API helpers ──
+  async function apiFetch(path, options = {}) {
+    const res = await fetch(API + path, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey, ...(options.headers || {}) },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Request failed');
+    return data;
+  }
+
+  // ── Dashboard load ──
+  async function loadDashboard() {
+    const [statsData, ordersData] = await Promise.all([
+      apiFetch('/stats'),
+      apiFetch(`/orders${activeFilter ? `?status=${activeFilter}` : ''}`),
+    ]);
+
+    // Show dashboard, hide login
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+
+    // Stats
+    document.getElementById('statTotal').textContent = statsData.data.total;
+    document.getElementById('statPending').textContent = statsData.data.pending;
+    document.getElementById('statRevenue').textContent = `$${statsData.data.todayRevenue.toFixed(2)}`;
+
+    // Orders table
+    renderOrders(ordersData.data);
+  }
+
+  function renderOrders(orders) {
+    const tbody = document.getElementById('ordersBody');
+    if (!orders.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="padding:40px;text-align:center;color:rgba(245,240,232,0.3);font-size:13px;">No orders found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = orders.map(o => {
+      const itemsSummary = o.items.map(i => `${i.name} ×${i.quantity}`).join(', ');
+      const time = new Date(o.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const typeLabel = o.orderType === 'delivery' ? '🚚 Delivery' : '🏠 Pickup';
+      return `
+        <tr class="order-row">
+          <td style="padding:14px 16px;font-size:13px;color:#d4af37;white-space:nowrap;">#${o.orderNumber}</td>
+          <td style="padding:14px 16px;">
+            <p style="margin:0;font-size:13px;color:#f5f0e8;">${o.customer.firstName} ${o.customer.lastName}</p>
+            <p style="margin:2px 0 0;font-size:11px;color:rgba(245,240,232,0.4);">${o.customer.email}</p>
+          </td>
+          <td style="padding:14px 16px;font-size:12px;color:rgba(245,240,232,0.6);max-width:200px;">${itemsSummary}</td>
+          <td style="padding:14px 16px;font-size:12px;color:rgba(245,240,232,0.5);">${typeLabel}</td>
+          <td style="padding:14px 16px;font-size:13px;color:#f5f0e8;text-align:right;white-space:nowrap;">$${o.pricing.total.toFixed(2)}</td>
+          <td style="padding:14px 16px;"><span class="badge badge-${o.status}">${o.status}</span></td>
+          <td style="padding:14px 16px;font-size:11px;color:rgba(245,240,232,0.4);white-space:nowrap;">${time}</td>
+          <td style="padding:14px 16px;">
+            <select class="status-select" onchange="updateStatus('${o._id}', this.value, this)">
+              <option value="" disabled selected>Change…</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="preparing">Preparing</option>
+              <option value="ready">Ready</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  async function updateStatus(id, status, selectEl) {
+    try {
+      await apiFetch(`/orders/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+      // Reload to reflect new status and updated stats
+      await loadDashboard();
+    } catch (err) {
+      alert('Failed to update status: ' + err.message);
+      selectEl.value = '';
+    }
+  }
+
+  // ── Filter buttons ──
+  document.getElementById('filterBtns').addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.status;
+    loadDashboard();
+  });
+
+  // ── Auto-restore session ──
+  const savedKey = sessionStorage.getItem('adminKey');
+  if (savedKey) {
+    adminKey = savedKey;
+    loadDashboard().catch(() => {
+      sessionStorage.removeItem('adminKey');
+      adminKey = '';
+    });
+  }
+</script>
+</body>
+</html>
