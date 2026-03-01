@@ -3,6 +3,7 @@ const router = express.Router();
 const Order = require('../models/Order');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { sendOrderReceipt } = require('../services/email');
+const jwt = require('jsonwebtoken');
 
 // POST /api/orders/create-payment-intent — create a Stripe PaymentIntent
 router.post('/create-payment-intent', async (req, res, next) => {
@@ -25,7 +26,18 @@ router.post('/create-payment-intent', async (req, res, next) => {
 // POST /api/orders — place a new order
 router.post('/', async (req, res, next) => {
   try {
-    const order = new Order(req.body);
+    const body = { ...req.body };
+
+    // Attach userId if a valid JWT is present — optional, never required
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const payload = jwt.verify(authHeader.slice(7), process.env.JWT_SECRET);
+        body.userId = payload.sub;
+      } catch { /* ignore — guest checkout is fine */ }
+    }
+
+    const order = new Order(body);
     await order.save();
     res.status(201).json({
       success: true,
@@ -51,6 +63,23 @@ router.get('/', async (req, res, next) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 }).limit(50);
     res.json({ success: true, count: orders.length, data: orders });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/orders/track/:orderNumber — public tracking by human-readable order number
+// Returns only non-sensitive fields (no email, phone, payment info)
+router.get('/track/:orderNumber', async (req, res, next) => {
+  try {
+    const order = await Order.findOne(
+      { orderNumber: req.params.orderNumber.toUpperCase() },
+      'orderNumber status orderType createdAt customer.firstName items pricing'
+    );
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+    res.json({ success: true, data: order });
   } catch (err) {
     next(err);
   }

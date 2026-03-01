@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Order | Raymah Café</title>
+    <meta name="description" content="Real-time order tracking for Raymah Café">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        black: '#0a0a0a',
+                        dark: '#141414',
+                        gold: '#d4af37',
+                        'gold-light': '#f4cf47',
+                        'gold-dark': '#b8860b',
+                        cream: '#f5f0e8',
+                        latte: '#e8dfd3',
+                    },
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'serif'],
+                        sans: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Montserrat', sans-serif; background-color: #0a0a0a; color: #f5f0e8; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #d4af37, #b8860b); border-radius: 3px; }
+        ::selection { background: rgba(212, 175, 55, 0.3); }
+
+        /* ── Section divider ──────────────────────────────── */
+        .section-divider {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+            margin: 0 auto;
+        }
+
+        /* ── Status badge ─────────────────────────────────── */
+        .status-badge {
+            display: inline-block;
+            padding: 0.35rem 1.5rem;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+        .status-badge.cancelled { border-color: #ef4444; color: #ef4444; }
+
+        /* ── Progress tracker ─────────────────────────────── */
+        .progress-track {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .stage-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Connector line between nodes */
+        .stage-connector {
+            flex: 1;
+            height: 2px;
+            margin-top: 19px;   /* vertically centred on the 40px circle */
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 1;
+        }
+        .stage-connector-bg {
+            position: absolute; inset: 0;
+            background: rgba(212, 175, 55, 0.1);
+        }
+        .stage-connector-fill {
+            position: absolute; top: 0; left: 0;
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #b8860b, #d4af37, #f4cf47);
+            transition: width 0.9s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .stage-connector-fill.filled { width: 100%; }
+
+        /* Stage circle */
+        .stage-circle {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(212, 175, 55, 0.15);
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .stage-circle.done {
+            background: #d4af37;
+            border-color: #d4af37;
+        }
+
+        .stage-circle.current {
+            background: #d4af37;
+            border-color: #d4af37;
+            animation: stage-pulse 2.2s ease-in-out infinite;
+        }
+
+        @keyframes stage-pulse {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(212,175,55,0.18), 0 0 14px rgba(212,175,55,0.28); }
+            50%       { box-shadow: 0 0 0 8px rgba(212,175,55,0.12), 0 0 28px rgba(212,175,55,0.48); }
+        }
+
+        .stage-label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.55rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            text-align: center;
+            margin-top: 0.5rem;
+            max-width: 56px;
+            line-height: 1.4;
+            transition: color 0.4s ease, opacity 0.4s ease;
+        }
+        .stage-item.done .stage-label,
+        .stage-item.current .stage-label { color: #d4af37; opacity: 1; }
+        .stage-item.future .stage-label  { color: #f5f0e8; opacity: 0.22; }
+
+        /* ── Spin for loading ─────────────────────────────── */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 0.9s linear infinite; }
+
+        /* ── Fade-in ──────────────────────────────────────── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeUp 0.5s ease forwards; }
+
+        /* ── Receipt row ─────────────────────────────────── */
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .receipt-row + .receipt-row { margin-top: 0.75rem; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <header style="border-bottom: 1px solid rgba(212,175,55,0.1)">
+        <div class="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <img src="logo.jpg" alt="Raymah Café" class="h-10 transition-transform group-hover:scale-105">
+            </a>
+            <a href="index.html" style="color:rgba(245,240,232,0.4); font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; display:flex; align-items:center; gap:0.5rem; transition:color 0.2s;" onmouseover="this.style.color='#d4af37'" onmouseout="this.style.color='rgba(245,240,232,0.4)'">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Home
+            </a>
+        </div>
+    </header>
+
+    <!-- ── Main ───────────────────────────────────────────── -->
+    <main class="max-w-3xl mx-auto px-6 py-16">
+
+        <!-- Loading -->
+        <div id="trackLoading" class="text-center py-24">
+            <div style="width:36px;height:36px;border:2px solid rgba(212,175,55,0.2);border-top-color:#d4af37;border-radius:50%;" class="spin mx-auto mb-6"></div>
+            <p style="color:rgba(245,240,232,0.3);font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;">Looking up your order…</p>
+        </div>
+
+        <!-- Error -->
+        <div id="trackError" class="hidden text-center py-24 fade-in">
+            <div style="width:60px;height:60px;border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+                <svg style="width:28px;height:28px;color:rgba(212,175,55,0.35)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h2 class="font-serif text-3xl text-cream mb-3">Order Not Found</h2>
+            <p id="trackErrorMsg" style="color:rgba(245,240,232,0.4);font-size:0.8rem;margin-bottom:2rem;">We couldn't find that order number. Please check and try again.</p>
+            <div class="flex gap-4 justify-center">
+                <a href="index.html" style="padding:0.75rem 1.5rem;border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;transition:all 0.3s;" onmouseover="this.style.background='#d4af37';this.style.color='#0a0a0a'" onmouseout="this.style.background='';this.style.color='#d4af37'">Back to Home</a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div id="trackContent" class="hidden fade-in">
+
+            <!-- Order header -->
+            <div class="text-center mb-14">
+                <p style="color:rgba(212,175,55,0.5);font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;margin-bottom:0.75rem;">Order Status</p>
+                <h1 id="trackOrderNumber" class="font-serif text-cream" style="font-size:3rem;margin-bottom:0.5rem;">RMH-XXXXXX</h1>
+                <p id="trackGreeting" style="color:rgba(245,240,232,0.4);font-size:0.78rem;margin-bottom:1.5rem;"></p>
+                <div class="section-divider"></div>
+            </div>
+
+            <!-- Status badge + ETA -->
+            <div class="text-center mb-14">
+                <div id="trackStatusBadge" class="status-badge">Pending</div>
+                <p id="trackETA" style="color:rgba(245,240,232,0.45);font-size:0.78rem;margin-top:0.875rem;min-height:1.2em;"></p>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div style="padding:0 0.5rem;margin-bottom:0.75rem;">
+                <div class="progress-track" id="progressTrack"></div>
+            </div>
+
+            <!-- Last updated indicator -->
+            <div style="text-align:center;margin-bottom:4rem;">
+                <p id="lastUpdated" style="color:rgba(245,240,232,0.2);font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;display:inline-flex;align-items:center;gap:0.4rem;">
+                    <span id="pollDot" style="width:6px;height:6px;border-radius:50%;background:rgba(212,175,55,0.4);display:inline-block;"></span>
+                    <span id="lastUpdatedText">Last updated just now</span>
+                </p>
+            </div>
+
+            <!-- Receipt -->
+            <div style="background:#111111;border:1px solid rgba(212,175,55,0.1);padding:2rem;">
+                <h2 class="font-serif text-cream" style="font-size:1.6rem;margin-bottom:1.5rem;">
+                    Order <span class="italic" style="color:#d4af37;">Receipt</span>
+                </h2>
+
+                <!-- Items -->
+                <div id="trackItems" style="margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(212,175,55,0.08);"></div>
+
+                <!-- Pricing -->
+                <div id="trackPricing"></div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex;gap:1rem;margin-top:2rem;">
+                <a href="index.html" style="flex:1;padding:1rem;text-align:center;border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;transition:all 0.3s;" onmouseover="this.style.background='#d4af37';this.style.color='#0a0a0a'" onmouseout="this.style.background='';this.style.color='#d4af37'">Back to Home</a>
+                <a href="index.html#collection" style="flex:1;padding:1rem;text-align:center;background:linear-gradient(135deg,#b8860b,#d4af37,#b8860b);color:#0a0a0a;font-size:0.65rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;transition:all 0.3s;" onmouseover="this.style.boxShadow='0 8px 24px rgba(212,175,55,0.3)'" onmouseout="this.style.boxShadow=''">Order Again</a>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        /* ══════════════════════════════════════════════════
+           Configuration
+           ══════════════════════════════════════════════════ */
+        const API_BASE = '/api';
+        const POLL_INTERVAL_MS = 10000;
+
+        const STAGES = [
+            { key: 'pending',   label: 'Order\nPlaced'  },
+            { key: 'confirmed', label: 'Confirmed'      },
+            { key: 'preparing', label: 'Preparing'      },
+            { key: 'ready',     label: 'Ready'          },
+            { key: 'delivered', label: 'Delivered'      },
+        ];
+
+        // Estimated total minutes remaining from the moment the order reached this status
+        const ETA_MINUTES = { pending: 45, confirmed: 38, preparing: 22, ready: 8, delivered: 0 };
+
+        const STATUS_LABELS = {
+            pending:   'Order Received',
+            confirmed: 'Confirmed',
+            preparing: 'Being Prepared',
+            ready:     'Ready',
+            delivered: 'Delivered',
+            cancelled: 'Cancelled',
+        };
+
+        /* ══════════════════════════════════════════════════
+           State
+           ══════════════════════════════════════════════════ */
+        let currentStatus = null;
+        let pollingInterval = null;
+        let lastUpdateTime = Date.now();
+        let orderNumber = null;
+        let orderCreatedAt = null;
+        let orderType = 'delivery';
+        let secondsSinceUpdate = 0;
+        let secondsTimer = null;
+
+        /* ══════════════════════════════════════════════════
+           Bootstrap — resolve order number
+           ══════════════════════════════════════════════════ */
+        function resolveOrderNumber() {
+            const params = new URLSearchParams(window.location.search);
+            const fromUrl = params.get('order');
+            if (fromUrl) return fromUrl.toUpperCase();
+            try {
+                const fromStorage = sessionStorage.getItem('lastOrderNumber');
+                if (fromStorage) return fromStorage.toUpperCase();
+            } catch (_) {}
+            return null;
+        }
+
+        /* ══════════════════════════════════════════════════
+           Helpers
+           ══════════════════════════════════════════════════ */
+        function svgCheck() {
+            return `<svg width="16" height="16" fill="none" stroke="#0a0a0a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`;
+        }
+
+        function svgDot() {
+            return `<svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#0a0a0a"/></svg>`;
+        }
+
+        function getCustomizationSummary(c) {
+            if (!c) return '';
+            const parts = [];
+            if (c.size)        parts.push(c.size);
+            if (c.milk && c.milk !== 'None') parts.push(c.milk);
+            if (c.temperature) parts.push(c.temperature);
+            if (c.addOns && c.addOns.length) c.addOns.forEach(a => parts.push(a));
+            return parts.join(' · ');
+        }
+
+        function getETA(status, createdAt) {
+            if (!createdAt || status === 'delivered' || status === 'cancelled') return '';
+            const elapsedMin = (Date.now() - new Date(createdAt).getTime()) / 60000;
+            const totalExpected = ETA_MINUTES[status] ?? 40;
+            const remaining = Math.max(0, Math.round(totalExpected - elapsedMin));
+            if (remaining === 0) return orderType === 'delivery' ? 'On the way — arriving any moment' : 'Ready — please come collect your order';
+            return `Estimated ${remaining} minute${remaining === 1 ? '' : 's'} remaining`;
+        }
+
+        /* ══════════════════════════════════════════════════
+           Progress Tracker Render
+           ══════════════════════════════════════════════════ */
+        function renderProgressTracker(status) {
+            const container = document.getElementById('progressTrack');
+            if (!container) return;
+
+            const statusIsCancelled = status === 'cancelled';
+            const currentIdx = STAGES.findIndex(s => s.key === status);
+            // If cancelled, highlight up to and including the last completed stage
+            const effectiveIdx = statusIsCancelled ? -1 : currentIdx;
+
+            let html = '';
+            STAGES.forEach((stage, i) => {
+                const isDone    = i < effectiveIdx;
+                const isCurrent = i === effectiveIdx;
+                const isFuture  = i > effectiveIdx;
+
+                // Determine circle class and inner icon
+                let circleClass = '';
+                let inner = '';
+                if (statusIsCancelled) {
+                    // All dim
+                    inner = `<span style="font-size:0.65rem;color:rgba(245,240,232,0.2)">${i + 1}</span>`;
+                } else if (isDone) {
+                    circleClass = 'done';
+                    inner = svgCheck();
+                } else if (isCurrent) {
+                    circleClass = 'current';
+                    inner = svgDot();
+                } else {
+                    inner = `<span style="font-size:0.65rem;color:rgba(245,240,232,0.18)">${i + 1}</span>`;
+                }
+
+                const stateClass = statusIsCancelled ? 'future' : (isDone ? 'done' : (isCurrent ? 'current' : 'future'));
+
+                // Multi-line label via CSS white-space
+                const labelLines = stage.label.split('\n');
+                const labelHtml = labelLines.map(l => `<span>${l}</span>`).join('<br>');
+
+                html += `<div class="stage-item ${stateClass}">
+                    <div class="stage-circle ${circleClass}">${inner}</div>
+                    <div class="stage-label">${labelHtml}</div>
+                </div>`;
+
+                // Connector between stages
+                if (i < STAGES.length - 1) {
+                    const connectorFilled = !statusIsCancelled && i < effectiveIdx;
+                    html += `<div class="stage-connector">
+                        <div class="stage-connector-bg"></div>
+                        <div class="stage-connector-fill${connectorFilled ? ' filled' : ''}"></div>
+                    </div>`;
+                }
+            });
+
+            // Use requestAnimationFrame so CSS transitions play after the DOM insert
+            container.innerHTML = html;
+            requestAnimationFrame(() => {
+                container.querySelectorAll('.stage-connector-fill').forEach(el => {
+                    if (!el.classList.contains('filled')) el.style.width = '0%';
+                });
+            });
+        }
+
+        /* ══════════════════════════════════════════════════
+           Render order data (items + pricing)
+           ══════════════════════════════════════════════════ */
+        function renderReceiptItems(items) {
+            const el = document.getElementById('trackItems');
+            if (!el || !items || !items.length) return;
+            el.innerHTML = items.map(item => {
+                const summary = getCustomizationSummary(item.customizations);
+                return `<div class="receipt-row">
+                    <div style="flex:1">
+                        <p style="color:#f5f0e8;font-size:0.82rem;margin-bottom:${summary ? '2px' : '0'}">${escHtml(item.name)}</p>
+                        ${summary ? `<p style="color:rgba(245,240,232,0.3);font-size:0.68rem;">${escHtml(summary)}</p>` : ''}
+                    </div>
+                    <div style="text-align:right;flex-shrink:0">
+                        <p style="color:#d4af37;font-size:0.82rem;">$${(item.price * item.quantity).toFixed(2)}</p>
+                        ${item.quantity > 1 ? `<p style="color:rgba(245,240,232,0.3);font-size:0.65rem;">× ${item.quantity}</p>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderPricing(pricing) {
+            const el = document.getElementById('trackPricing');
+            if (!el || !pricing) return;
+            const rows = [
+                { label: 'Subtotal', value: pricing.subtotal },
+            ];
+            if (pricing.deliveryFee > 0) rows.push({ label: 'Delivery', value: pricing.deliveryFee });
+            if (pricing.discount > 0)    rows.push({ label: 'Discount', value: -pricing.discount, neg: true });
+            rows.push({ label: 'Tax', value: pricing.tax });
+            if (pricing.tip > 0)         rows.push({ label: 'Tip', value: pricing.tip });
+
+            const rowsHtml = rows.map(r => `
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">
+                    <span style="color:rgba(245,240,232,0.4);font-size:0.72rem;">${r.label}</span>
+                    <span style="color:rgba(245,240,232,${r.neg ? '0.4' : '0.6'});font-size:0.72rem;">${r.neg ? '-' : ''}$${Math.abs(r.value).toFixed(2)}</span>
+                </div>`).join('');
+
+            el.innerHTML = rowsHtml + `
+                <div style="display:flex;justify-content:space-between;padding-top:0.75rem;margin-top:0.5rem;border-top:1px solid rgba(212,175,55,0.08);">
+                    <span class="font-serif" style="color:#f5f0e8;font-size:1.05rem;">Total</span>
+                    <span class="font-serif" style="color:#d4af37;font-size:1.1rem;font-weight:600;">$${pricing.total.toFixed(2)}</span>
+                </div>`;
+        }
+
+        function escHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = String(str);
+            return d.innerHTML;
+        }
+
+        /* ══════════════════════════════════════════════════
+           "Last updated X seconds ago" ticker
+           ══════════════════════════════════════════════════ */
+        function startSecondsTicker() {
+            if (secondsTimer) clearInterval(secondsTimer);
+            secondsSinceUpdate = 0;
+            secondsTimer = setInterval(() => {
+                secondsSinceUpdate++;
+                const el = document.getElementById('lastUpdatedText');
+                if (el) {
+                    el.textContent = secondsSinceUpdate < 5
+                        ? 'Last updated just now'
+                        : `Last updated ${secondsSinceUpdate}s ago`;
+                }
+            }, 1000);
+        }
+
+        /* ══════════════════════════════════════════════════
+           Fetch + render a full update
+           ══════════════════════════════════════════════════ */
+        async function fetchOrderStatus(firstLoad = false) {
+            try {
+                // Animate the poll dot
+                const dot = document.getElementById('pollDot');
+                if (dot) { dot.style.background = '#d4af37'; setTimeout(() => { dot.style.background = 'rgba(212,175,55,0.4)'; }, 600); }
+
+                const res  = await fetch(`${API_BASE}/orders/track/${orderNumber}`);
+                const body = await res.json();
+
+                if (!res.ok || !body.success) {
+                    if (firstLoad) showError(body.message || 'Order not found');
+                    return;
+                }
+
+                const order = body.data;
+                orderCreatedAt = order.createdAt;
+                orderType      = order.orderType || 'delivery';
+
+                // Detect status change for a smooth re-animation
+                const statusChanged = currentStatus !== null && currentStatus !== order.status;
+                currentStatus = order.status;
+
+                // First load: show the content panel and pre-populate from sessionStorage if available
+                if (firstLoad) {
+                    // Set order number + greeting
+                    document.getElementById('trackOrderNumber').textContent = order.orderNumber;
+                    const greeting = order.customer?.firstName
+                        ? `Hello, ${order.customer.firstName} — here's your live order status`
+                        : 'Here's your live order status';
+                    document.getElementById('trackGreeting').textContent = greeting;
+
+                    // Render items and pricing (prefer live API data, fall back to sessionStorage snapshot)
+                    const items   = order.items?.length   ? order.items   : getSessionItems();
+                    const pricing = order.pricing?.total  ? order.pricing  : getSessionPricing();
+                    renderReceiptItems(items);
+                    renderPricing(pricing);
+
+                    show('trackContent');
+                    hide('trackLoading');
+                }
+
+                // Always update status badge + ETA + progress
+                const statusLabel = order.status === 'ready' && order.orderType === 'pickup'
+                    ? 'Ready for Pickup'
+                    : (STATUS_LABELS[order.status] || order.status);
+
+                const badge = document.getElementById('trackStatusBadge');
+                if (badge) {
+                    badge.textContent = statusLabel;
+                    badge.className = 'status-badge' + (order.status === 'cancelled' ? ' cancelled' : '');
+                }
+
+                const etaEl = document.getElementById('trackETA');
+                if (etaEl) etaEl.textContent = getETA(order.status, order.createdAt);
+
+                // Re-render progress tracker (smooth CSS animation)
+                if (firstLoad || statusChanged) {
+                    renderProgressTracker(order.status);
+                }
+
+                // Reset the "last updated" ticker
+                startSecondsTicker();
+                lastUpdateTime = Date.now();
+
+                // Stop polling once order reaches a terminal state
+                if (order.status === 'delivered' || order.status === 'cancelled') {
+                    stopPolling();
+                }
+
+            } catch (err) {
+                console.warn('[tracking] Fetch failed:', err.message);
+            }
+        }
+
+        /* ══════════════════════════════════════════════════
+           Polling control
+           ══════════════════════════════════════════════════ */
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(() => fetchOrderStatus(false), POLL_INTERVAL_MS);
+        }
+
+        function stopPolling() {
+            if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+            if (secondsTimer)    { clearInterval(secondsTimer);    secondsTimer    = null; }
+            const el = document.getElementById('lastUpdatedText');
+            if (el) el.textContent = 'Live tracking stopped (order complete)';
+        }
+
+        /* ══════════════════════════════════════════════════
+           SessionStorage helpers (for instant first render)
+           ══════════════════════════════════════════════════ */
+        function getSessionItems() {
+            try { return JSON.parse(sessionStorage.getItem('lastOrderData') || 'null')?.items || []; }
+            catch (_) { return []; }
+        }
+        function getSessionPricing() {
+            try { return JSON.parse(sessionStorage.getItem('lastOrderData') || 'null')?.pricing || null; }
+            catch (_) { return null; }
+        }
+
+        /* ══════════════════════════════════════════════════
+           UI helpers
+           ══════════════════════════════════════════════════ */
+        function show(id) { const el = document.getElementById(id); if (el) el.classList.remove('hidden'); }
+        function hide(id) { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }
+
+        function showError(msg) {
+            hide('trackLoading');
+            hide('trackContent');
+            const msgEl = document.getElementById('trackErrorMsg');
+            if (msgEl && msg) msgEl.textContent = msg;
+            show('trackError');
+        }
+
+        /* ══════════════════════════════════════════════════
+           Kickoff
+           ══════════════════════════════════════════════════ */
+        orderNumber = resolveOrderNumber();
+
+        if (!orderNumber) {
+            showError('No order number found. Please use the link from your confirmation email.');
+        } else {
+            // If we have sessionStorage data, show a skeleton render instantly
+            const sessionData = (() => { try { return JSON.parse(sessionStorage.getItem('lastOrderData') || 'null'); } catch (_) { return null; } })();
+            if (sessionData && sessionData.orderNumber === orderNumber) {
+                document.getElementById('trackOrderNumber').textContent = sessionData.orderNumber;
+                if (sessionData.firstName) {
+                    document.getElementById('trackGreeting').textContent =
+                        `Hello, ${sessionData.firstName} — here's your live order status`;
+                }
+                renderReceiptItems(sessionData.items || []);
+                renderPricing(sessionData.pricing || null);
+                renderProgressTracker('pending'); // initial placeholder; API response updates it
+                show('trackContent');
+                hide('trackLoading');
+            }
+
+            fetchOrderStatus(true).then(() => startPolling());
+        }
+    </script>
+</body>
+</html>

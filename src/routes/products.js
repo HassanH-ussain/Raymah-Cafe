@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 
-// GET /api/products — list all in-stock products
+// GET /api/products — list in-stock products, optionally filtered by ?category=
 router.get('/', async (req, res, next) => {
   try {
-    const products = await Product.find({ inStock: true }).sort({ createdAt: 1 });
+    const filter = { inStock: true };
+    if (req.query.category) filter.category = req.query.category;
+    const products = await Product.find(filter).sort({ createdAt: 1 });
     res.json({ success: true, count: products.length, data: products });
   } catch (err) {
     next(err);

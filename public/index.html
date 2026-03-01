@@ -19,6 +19,10 @@
     
     <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- Leaflet.js (map) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLEg=" crossorigin=""></script>
     
     <!-- Tailwind Config -->
     <script>
@@ -76,10 +80,23 @@
                     <a href="#story" class="nav-link text-cream/80 hover:text-gold text-xs uppercase tracking-widest font-medium transition-colors">Our Story</a>
                     <a href="#collection" class="nav-link text-cream/80 hover:text-gold text-xs uppercase tracking-widest font-medium transition-colors">Collection</a>
                     <a href="#experience" class="nav-link text-cream/80 hover:text-gold text-xs uppercase tracking-widest font-medium transition-colors">Experience</a>
+                    <a href="#locator" class="nav-link text-cream/80 hover:text-gold text-xs uppercase tracking-widest font-medium transition-colors">Locations</a>
                     <a href="#reviews" class="nav-link text-cream/80 hover:text-gold text-xs uppercase tracking-widest font-medium transition-colors">Reviews</a>
                     <a href="#contact" class="nav-link text-cream/80 hover:text-gold text-xs uppercase tracking-widest font-medium transition-colors">Contact</a>
                 </div>
                 
+                <!-- Account Button -->
+                <a href="account.html" id="accountBtn" class="relative text-cream hover:text-gold transition-colors mr-2" aria-label="My Account" title="My Account">
+                    <!-- Outline (logged out) -->
+                    <svg id="accountIconOut" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.121 17.804A8.966 8.966 0 0112 15c2.21 0 4.232.797 5.879 2.11M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <!-- Filled (logged in) -->
+                    <svg id="accountIconIn" class="w-6 h-6 text-gold hidden" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M12 12a5 5 0 100-10 5 5 0 000 10zm-7 8a7 7 0 0114 0H5z" clip-rule="evenodd"/>
+                    </svg>
+                </a>
+
                 <!-- Cart Button -->
                 <button id="cartBtn" class="relative text-cream hover:text-gold transition-colors mr-4" aria-label="Shopping Cart">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,8 +129,10 @@
         <a href="#story">Our Story</a>
         <a href="#collection">Collection</a>
         <a href="#experience">Experience</a>
+        <a href="#locator">Locations</a>
         <a href="#reviews">Reviews</a>
         <a href="#contact">Contact</a>
+        <a href="account.html" id="mobileAccountLink">My Account</a>
     </div>
 
     <!-- Hero Section -->
@@ -295,29 +314,28 @@
     <section id="collection" class="py-32 bg-dark relative">
         <div class="max-w-7xl mx-auto px-6 lg:px-12">
             <!-- Section Header -->
-            <div class="text-center mb-20" data-aos="fade-up">
-                <p class="text-gold uppercase tracking-[0.3em] text-xs mb-4 font-medium">Our Collection</p>
+            <div class="text-center mb-12" data-aos="fade-up">
+                <p class="text-gold uppercase tracking-[0.3em] text-xs mb-4 font-medium">Our Menu</p>
                 <h2 class="font-serif text-5xl lg:text-6xl text-cream mb-6">
-                    Signature <span class="italic text-gold">Roasts</span>
+                    The <span class="italic text-gold">Collection</span>
                 </h2>
                 <div class="section-divider mx-auto"></div>
             </div>
-            
+
+            <!-- Category Tabs -->
+            <div class="flex flex-wrap justify-center gap-2 mb-14" id="categoryTabs" data-aos="fade-up" data-aos-delay="100">
+                <button class="category-tab active" data-category="">All</button>
+                <button class="category-tab" data-category="drinks-hot">Hot Drinks</button>
+                <button class="category-tab" data-category="drinks-cold">Cold Drinks</button>
+                <button class="category-tab" data-category="food">Food</button>
+                <button class="category-tab" data-category="beans">Whole Beans</button>
+            </div>
+
             <!-- Products Grid — populated dynamically from GET /api/products -->
             <div id="productsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div class="md:col-span-2 lg:col-span-3 text-center py-20">
-                    <p class="text-cream/30 text-sm uppercase tracking-widest">Loading collection...</p>
+                    <p class="text-cream/30 text-sm uppercase tracking-widest">Loading menu...</p>
                 </div>
-            </div>
-            
-            <!-- View All Button -->
-            <div class="text-center mt-16" data-aos="fade-up">
-                <a href="#" class="inline-flex items-center gap-3 text-cream/50 hover:text-gold text-xs uppercase tracking-widest font-medium transition-colors">
-                    View Full Menu
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                    </svg>
-                </a>
             </div>
         </div>
     </section>
@@ -425,6 +443,55 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Store Locator Section -->
+    <section id="locator" class="py-32 bg-dark relative overflow-hidden">
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-gold/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-6 lg:px-12 relative z-10">
+
+            <!-- Header -->
+            <div class="text-center mb-16" data-aos="fade-up">
+                <p class="text-gold uppercase tracking-[0.3em] text-xs mb-4 font-medium">Our Locations</p>
+                <h2 class="font-serif text-4xl lg:text-5xl text-cream">
+                    Find Your <span class="italic text-gold">Nearest Café</span>
+                </h2>
+                <div class="section-divider mx-auto mt-6"></div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto mb-10" data-aos="fade-up" data-aos-delay="100">
+                <input
+                    id="locatorSearch"
+                    type="text"
+                    placeholder="Enter a city or zip code..."
+                    class="flex-1 bg-black border border-gold/20 text-cream text-sm px-5 py-3 focus:outline-none focus:border-gold/50 placeholder:text-cream/20 font-sans"
+                />
+                <button id="locatorSearchBtn" class="px-6 py-3 bg-gradient-to-r from-gold-dark via-gold to-gold-dark text-black text-xs font-semibold uppercase tracking-widest hover:shadow-gold/30 hover:shadow-lg transition-all duration-300 whitespace-nowrap">
+                    Find Locations
+                </button>
+                <button id="locatorGeoBtn" class="px-5 py-3 border border-gold/30 text-gold text-xs uppercase tracking-widest hover:bg-gold/10 transition-colors flex items-center gap-2 whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Use My Location
+                </button>
+            </div>
+            <p id="locatorMessage" class="text-center text-cream/30 text-xs uppercase tracking-widest mb-8 hidden"></p>
+
+            <!-- Map -->
+            <div class="mb-10" data-aos="fade-up" data-aos-delay="150">
+                <div id="locatorMap" class="w-full border border-gold/15" style="height: 400px;"></div>
+            </div>
+
+            <!-- Location Cards -->
+            <div id="locationCards" class="grid md:grid-cols-2 lg:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="200">
+                <!-- Populated by JS -->
+            </div>
+
         </div>
     </section>
 
@@ -693,10 +760,137 @@
     <!-- Cart Overlay -->
     <div id="cartOverlay" class="fixed inset-0 bg-black/80 z-[199] opacity-0 pointer-events-none transition-opacity duration-300"></div>
 
+    <!-- Customization Modal -->
+    <div id="customizeModalOverlay" class="customize-modal-overlay">
+        <div class="customize-modal">
+
+            <!-- Header -->
+            <div class="flex items-start justify-between p-6 border-b border-gold/10">
+                <div>
+                    <p class="text-cream/40 text-xs uppercase tracking-widest mb-1">Customize Your Order</p>
+                    <h3 id="modalProductName" class="font-serif text-2xl text-cream">Product Name</h3>
+                    <p id="modalProductPrice" class="text-gold/60 text-sm mt-0.5">From $0.00</p>
+                </div>
+                <button id="closeCustomizeModal" class="text-cream/30 hover:text-gold transition-colors p-1 mt-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Options -->
+            <div class="p-6 space-y-6">
+
+                <!-- Size -->
+                <div>
+                    <p class="customize-section-title">Size</p>
+                    <div class="flex gap-2">
+                        <button class="customize-option size-option" data-size="Small" data-price-adj="-0.50">
+                            Small<br><span class="opacity-50 text-xs">−$0.50</span>
+                        </button>
+                        <button class="customize-option size-option active" data-size="Medium" data-price-adj="0">
+                            Medium<br><span class="opacity-50 text-xs">Base</span>
+                        </button>
+                        <button class="customize-option size-option" data-size="Large" data-price-adj="1.00">
+                            Large<br><span class="opacity-50 text-xs">+$1.00</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Milk -->
+                <div>
+                    <p class="customize-section-title">Milk</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="customize-option milk-option active" data-milk="Whole Milk" data-price-adj="0">Whole Milk</button>
+                        <button class="customize-option milk-option" data-milk="Oat Milk" data-price-adj="0.75">Oat Milk <span class="opacity-40 text-xs">+$0.75</span></button>
+                        <button class="customize-option milk-option" data-milk="Almond Milk" data-price-adj="0.75">Almond Milk <span class="opacity-40 text-xs">+$0.75</span></button>
+                        <button class="customize-option milk-option" data-milk="Soy Milk" data-price-adj="0.75">Soy Milk <span class="opacity-40 text-xs">+$0.75</span></button>
+                        <button class="customize-option milk-option col-span-2" data-milk="None" data-price-adj="0">No Milk</button>
+                    </div>
+                </div>
+
+                <!-- Temperature -->
+                <div id="temperatureSection">
+                    <p class="customize-section-title">Temperature</p>
+                    <div class="flex gap-2">
+                        <button class="customize-option temp-option active" data-temp="Hot">Hot</button>
+                        <button class="customize-option temp-option" data-temp="Iced">Iced</button>
+                    </div>
+                </div>
+
+                <!-- Add-ons -->
+                <div>
+                    <p class="customize-section-title">Add-ons</p>
+                    <div class="space-y-2">
+                        <label class="customize-addon">
+                            <input type="checkbox" class="addon-check" data-addon="Extra Shot" data-price-adj="1.00">
+                            <span class="flex-1 text-cream/70 text-sm">Extra Shot</span>
+                            <span class="text-gold/50 text-xs font-medium">+$1.00</span>
+                        </label>
+                        <label class="customize-addon">
+                            <input type="checkbox" class="addon-check" data-addon="Vanilla Syrup" data-price-adj="0.75">
+                            <span class="flex-1 text-cream/70 text-sm">Vanilla Syrup</span>
+                            <span class="text-gold/50 text-xs font-medium">+$0.75</span>
+                        </label>
+                        <label class="customize-addon">
+                            <input type="checkbox" class="addon-check" data-addon="Caramel Drizzle" data-price-adj="0.75">
+                            <span class="flex-1 text-cream/70 text-sm">Caramel Drizzle</span>
+                            <span class="text-gold/50 text-xs font-medium">+$0.75</span>
+                        </label>
+                        <label class="customize-addon">
+                            <input type="checkbox" class="addon-check" data-addon="Hazelnut Syrup" data-price-adj="0.75">
+                            <span class="flex-1 text-cream/70 text-sm">Hazelnut Syrup</span>
+                            <span class="text-gold/50 text-xs font-medium">+$0.75</span>
+                        </label>
+                        <label class="customize-addon">
+                            <input type="checkbox" class="addon-check" data-addon="Oat Whip" data-price-adj="0.50">
+                            <span class="flex-1 text-cream/70 text-sm">Oat Whip</span>
+                            <span class="text-gold/50 text-xs font-medium">+$0.50</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Special Instructions -->
+                <div>
+                    <p class="customize-section-title">Special Instructions</p>
+                    <textarea id="modalSpecialInstructions"
+                        maxlength="150"
+                        rows="3"
+                        placeholder="Any special requests? (e.g. extra hot, light ice, no foam)"
+                        class="w-full bg-transparent border border-gold/20 text-cream/70 text-sm p-3 resize-none focus:outline-none focus:border-gold/40 placeholder:text-cream/20 font-sans leading-relaxed"></textarea>
+                    <p class="text-cream/20 text-xs text-right mt-1"><span id="instrCharCount">0</span>/150</p>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-gold/10">
+                <button id="modalAddToCartBtn" class="w-full py-4 bg-gradient-to-r from-gold-dark via-gold to-gold-dark text-black font-semibold uppercase tracking-wider text-sm hover:shadow-lg hover:shadow-gold/30 transition-all duration-300">
+                    Add to Cart — <span id="modalFinalPrice">$0.00</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- AOS Animation Library -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    
+
     <!-- Custom Scripts -->
     <script src="script.js"></script>
+
+    <!-- Account icon state — show filled icon if user is logged in -->
+    <script>
+        (function () {
+            if (localStorage.getItem('raymahToken')) {
+                const outIcon = document.getElementById('accountIconOut');
+                const inIcon  = document.getElementById('accountIconIn');
+                if (outIcon) outIcon.classList.add('hidden');
+                if (inIcon)  inIcon.classList.remove('hidden');
+                const mobileLink = document.getElementById('mobileAccountLink');
+                if (mobileLink) mobileLink.textContent = 'My Account ✓';
+            }
+        })();
+    </script>
 </body>
 </html>

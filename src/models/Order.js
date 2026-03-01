@@ -4,6 +4,13 @@ const orderItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   quantity: { type: Number, required: true, min: 1 },
+  customizations: {
+    size: { type: String, default: '' },
+    milk: { type: String, default: '' },
+    temperature: { type: String, default: '' },
+    addOns: [{ type: String }],
+    specialInstructions: { type: String, default: '' },
+  },
 });
 
 const orderSchema = new mongoose.Schema(
@@ -55,6 +62,7 @@ const orderSchema = new mongoose.Schema(
     },
     promoCode: { type: String, default: '' },
     stripePaymentIntentId: { type: String },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // optional — set when customer is logged in
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'],

@@ -14,6 +14,7 @@ const productRoutes = require('./src/routes/products');
 const orderRoutes = require('./src/routes/orders');
 const reviewRoutes = require('./src/routes/reviews');
 const adminRoutes = require('./src/routes/admin');
+const authRoutes = require('./src/routes/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,17 +36,28 @@ app.use(helmet({
         "'unsafe-inline'", // Tailwind config block
         'https://cdn.tailwindcss.com',
         'https://js.stripe.com',
+        'https://unpkg.com',  // Leaflet.js + AOS
       ],
       styleSrc: [
         "'self'",
         "'unsafe-inline'",
         'https://fonts.googleapis.com',
         'https://cdn.tailwindcss.com',
+        'https://unpkg.com',  // Leaflet CSS
       ],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       frameSrc: ['https://js.stripe.com'],
-      connectSrc: ["'self'", 'https://api.stripe.com'],
-      imgSrc: ["'self'", 'data:'],
+      connectSrc: [
+        "'self'",
+        'https://api.stripe.com',
+        'https://nominatim.openstreetmap.org',  // Geocoding
+      ],
+      imgSrc: [
+        "'self'",
+        'data:',
+        'https://*.basemaps.cartocdn.com',  // Dark map tiles
+        'https://*.tile.openstreetmap.org', // Fallback tiles
+      ],
     },
   },
 }));
@@ -91,6 +103,15 @@ app.use('/api/orders/create-payment-intent', rateLimit({
   message: { success: false, message: 'Too many payment attempts, please try again later.' },
 }));
 
+// Tighter limit on auth endpoints to prevent brute-force: 20 req / 15 min per IP
+app.use('/api/auth', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many attempts, please try again later.' },
+}));
+
 // ----------------------------------------
 // Static frontend
 // ----------------------------------------
@@ -103,6 +124,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

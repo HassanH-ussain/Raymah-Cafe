@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account | Raymah Café</title>
+    <meta name="description" content="Sign in or create a Raymah Café account to view your order history.">
+
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        black: '#0a0a0a',
+                        dark: '#141414',
+                        gold: '#d4af37',
+                        'gold-light': '#f4cf47',
+                        'gold-dark': '#b8860b',
+                        cream: '#f5f0e8',
+                        latte: '#e8dfd3',
+                    },
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'serif'],
+                        sans: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        /* ---- Auth Card ---- */
+        .auth-card {
+            background: linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%);
+            border: 1px solid rgba(212,175,55,0.2);
+            border-radius: 2px;
+        }
+
+        /* ---- Tab ---- */
+        .auth-tab {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 0.75rem 1.5rem;
+            color: rgba(245,240,232,0.4);
+            border-bottom: 2px solid transparent;
+            transition: all 0.25s;
+            cursor: pointer;
+        }
+        .auth-tab.active {
+            color: #d4af37;
+            border-bottom-color: #d4af37;
+        }
+
+        /* ---- Input ---- */
+        .auth-input {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(212,175,55,0.2);
+            border-radius: 2px;
+            color: #f5f0e8;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.8rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        .auth-input:focus { border-color: #d4af37; }
+        .auth-input::placeholder { color: rgba(245,240,232,0.3); }
+
+        /* ---- Button ---- */
+        .auth-btn {
+            background: #d4af37;
+            color: #0a0a0a;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 0.9rem 2rem;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            transition: background 0.25s, opacity 0.25s;
+        }
+        .auth-btn:hover { background: #f4cf47; }
+        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ---- Order card ---- */
+        .order-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(212,175,55,0.12);
+            border-radius: 2px;
+        }
+        .order-card:hover { border-color: rgba(212,175,55,0.3); }
+
+        /* ---- Status badge ---- */
+        .status-badge {
+            display: inline-block;
+            font-size: 0.6rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+        .status-pending    { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .status-confirmed  { background: rgba(96,165,250,0.15);  color: #60a5fa; }
+        .status-preparing  { background: rgba(251,146,60,0.15);  color: #fb923c; }
+        .status-ready      { background: rgba(52,211,153,0.15);  color: #34d399; }
+        .status-delivered  { background: rgba(52,211,153,0.15);  color: #34d399; }
+        .status-cancelled  { background: rgba(248,113,113,0.15); color: #f87171; }
+
+        /* ---- Error / success banner ---- */
+        .msg-error   { color: #f87171; font-size: 0.78rem; }
+        .msg-success { color: #34d399; font-size: 0.78rem; }
+
+        /* background grain */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="bg-black min-h-screen flex flex-col" style="font-family: 'Montserrat', sans-serif;">
+
+    <!-- Nav -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-gold/10">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <img src="logo.jpg" alt="Raymah Café" class="w-8 h-8 rounded-full opacity-90 group-hover:opacity-100 transition-opacity">
+                <span class="font-serif text-cream/80 group-hover:text-gold transition-colors text-lg">Raymah Café</span>
+            </a>
+            <a href="index.html" class="text-cream/50 hover:text-gold text-xs uppercase tracking-widest transition-colors">← Back to Home</a>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="flex-1 flex items-center justify-center px-4 pt-24 pb-12 relative z-10">
+
+        <!-- ===== AUTH VIEW (shown when logged out) ===== -->
+        <div id="authView" class="w-full max-w-md">
+            <div class="text-center mb-8">
+                <p class="text-gold uppercase tracking-[0.4em] text-xs mb-3">Raymah Café</p>
+                <h1 class="font-serif text-4xl text-cream font-light">My Account</h1>
+            </div>
+
+            <div class="auth-card p-8">
+                <!-- Tabs -->
+                <div class="flex border-b border-white/10 mb-6">
+                    <button class="auth-tab active" id="signinTab" onclick="switchTab('signin')">Sign In</button>
+                    <button class="auth-tab" id="registerTab" onclick="switchTab('register')">Create Account</button>
+                </div>
+
+                <!-- Message area -->
+                <p id="authMsg" class="mb-4 hidden"></p>
+
+                <!-- Sign In Form -->
+                <form id="signinForm" onsubmit="handleSignin(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-cream/50 text-xs uppercase tracking-wider mb-1.5">Email</label>
+                            <input type="email" id="siEmail" class="auth-input" placeholder="you@example.com" required autocomplete="email">
+                        </div>
+                        <div>
+                            <label class="block text-cream/50 text-xs uppercase tracking-wider mb-1.5">Password</label>
+                            <input type="password" id="siPassword" class="auth-input" placeholder="••••••••" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="auth-btn mt-2" id="signinBtn">Sign In</button>
+                    </div>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-cream/50 text-xs uppercase tracking-wider mb-1.5">First Name</label>
+                                <input type="text" id="regFirst" class="auth-input" placeholder="Jane" required autocomplete="given-name">
+                            </div>
+                            <div>
+                                <label class="block text-cream/50 text-xs uppercase tracking-wider mb-1.5">Last Name</label>
+                                <input type="text" id="regLast" class="auth-input" placeholder="Smith" required autocomplete="family-name">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-cream/50 text-xs uppercase tracking-wider mb-1.5">Email</label>
+                            <input type="email" id="regEmail" class="auth-input" placeholder="you@example.com" required autocomplete="email">
+                        </div>
+                        <div>
+                            <label class="block text-cream/50 text-xs uppercase tracking-wider mb-1.5">Password <span class="text-cream/30">(min 8 characters)</span></label>
+                            <input type="password" id="regPassword" class="auth-input" placeholder="••••••••" required minlength="8" autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="auth-btn mt-2" id="registerBtn">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== ACCOUNT VIEW (shown when logged in) ===== -->
+        <div id="accountView" class="hidden w-full max-w-3xl">
+
+            <!-- Header -->
+            <div class="flex items-start justify-between mb-10">
+                <div>
+                    <p class="text-gold uppercase tracking-[0.4em] text-xs mb-2">Welcome back</p>
+                    <h1 class="font-serif text-4xl text-cream font-light" id="welcomeName">—</h1>
+                    <p class="text-cream/40 text-xs mt-1" id="accountEmail"></p>
+                </div>
+                <button onclick="handleSignOut()" class="text-cream/40 hover:text-red-400 text-xs uppercase tracking-widest transition-colors mt-2">Sign Out</button>
+            </div>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-4 mb-8">
+                <div class="flex-1 h-px bg-gold/20"></div>
+                <span class="text-gold uppercase tracking-widest text-xs">Order History</span>
+                <div class="flex-1 h-px bg-gold/20"></div>
+            </div>
+
+            <!-- Orders loading -->
+            <div id="ordersLoading" class="text-center py-16 text-cream/40 text-sm">Loading your orders…</div>
+
+            <!-- Orders empty -->
+            <div id="ordersEmpty" class="hidden text-center py-16">
+                <p class="text-cream/30 text-sm mb-4">No orders yet.</p>
+                <a href="index.html#collection" class="text-gold hover:text-gold-light text-xs uppercase tracking-widest transition-colors">Browse Our Collection →</a>
+            </div>
+
+            <!-- Orders list -->
+            <div id="ordersList" class="hidden space-y-4"></div>
+        </div>
+    </main>
+
+    <script>
+    const API = '/api';
+
+    // ----------------------------------------
+    // Helpers
+    // ----------------------------------------
+    function getToken() { return localStorage.getItem('raymahToken'); }
+    function getUser()  {
+        try { return JSON.parse(localStorage.getItem('raymahUser')); } catch { return null; }
+    }
+
+    function showMsg(text, type) {
+        const el = document.getElementById('authMsg');
+        el.textContent = text;
+        el.className = type === 'error' ? 'mb-4 msg-error' : 'mb-4 msg-success';
+        el.classList.remove('hidden');
+    }
+
+    function clearMsg() {
+        const el = document.getElementById('authMsg');
+        el.textContent = '';
+        el.classList.add('hidden');
+    }
+
+    function statusClass(status) {
+        const map = {
+            pending: 'status-pending',
+            confirmed: 'status-confirmed',
+            preparing: 'status-preparing',
+            ready: 'status-ready',
+            delivered: 'status-delivered',
+            cancelled: 'status-cancelled',
+        };
+        return map[status] || 'status-pending';
+    }
+
+    function formatDate(iso) {
+        return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatPrice(n) { return '$' + Number(n).toFixed(2); }
+
+    // ----------------------------------------
+    // Tab switching
+    // ----------------------------------------
+    function switchTab(tab) {
+        clearMsg();
+        document.getElementById('signinTab').classList.toggle('active', tab === 'signin');
+        document.getElementById('registerTab').classList.toggle('active', tab === 'register');
+        document.getElementById('signinForm').classList.toggle('hidden', tab !== 'signin');
+        document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+    }
+
+    // ----------------------------------------
+    // Auth handlers
+    // ----------------------------------------
+    async function handleSignin(e) {
+        e.preventDefault();
+        clearMsg();
+        const btn = document.getElementById('signinBtn');
+        btn.disabled = true; btn.textContent = 'Signing in…';
+
+        try {
+            const res = await fetch(`${API}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('siEmail').value.trim(),
+                    password: document.getElementById('siPassword').value,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message);
+            onAuthSuccess(data.token, data.user);
+        } catch (err) {
+            showMsg(err.message || 'Sign-in failed. Please try again.', 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Sign In';
+        }
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        clearMsg();
+        const btn = document.getElementById('registerBtn');
+        btn.disabled = true; btn.textContent = 'Creating account…';
+
+        try {
+            const res = await fetch(`${API}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    firstName: document.getElementById('regFirst').value.trim(),
+                    lastName:  document.getElementById('regLast').value.trim(),
+                    email:     document.getElementById('regEmail').value.trim(),
+                    password:  document.getElementById('regPassword').value,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message);
+            onAuthSuccess(data.token, data.user);
+        } catch (err) {
+            showMsg(err.message || 'Registration failed. Please try again.', 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = 'Create Account';
+        }
+    }
+
+    function onAuthSuccess(token, user) {
+        localStorage.setItem('raymahToken', token);
+        localStorage.setItem('raymahUser', JSON.stringify(user));
+        showAccountView(user);
+        loadOrderHistory();
+        // Update account icon on any open tabs (best effort)
+        try { updateNavIcon(); } catch (_) {}
+    }
+
+    function handleSignOut() {
+        localStorage.removeItem('raymahToken');
+        localStorage.removeItem('raymahUser');
+        document.getElementById('accountView').classList.add('hidden');
+        document.getElementById('authView').classList.remove('hidden');
+        switchTab('signin');
+    }
+
+    // ----------------------------------------
+    // Account view
+    // ----------------------------------------
+    function showAccountView(user) {
+        document.getElementById('authView').classList.add('hidden');
+        document.getElementById('accountView').classList.remove('hidden');
+        document.getElementById('welcomeName').textContent = user.firstName + ' ' + user.lastName;
+        document.getElementById('accountEmail').textContent = user.email;
+    }
+
+    async function loadOrderHistory() {
+        const token = getToken();
+        if (!token) return;
+
+        document.getElementById('ordersLoading').classList.remove('hidden');
+        document.getElementById('ordersEmpty').classList.add('hidden');
+        document.getElementById('ordersList').classList.add('hidden');
+
+        try {
+            const res = await fetch(`${API}/auth/orders`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (res.status === 401) { handleSignOut(); return; }
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+
+            document.getElementById('ordersLoading').classList.add('hidden');
+
+            if (!data.data.length) {
+                document.getElementById('ordersEmpty').classList.remove('hidden');
+                return;
+            }
+
+            renderOrders(data.data);
+        } catch (err) {
+            document.getElementById('ordersLoading').textContent = 'Could not load orders. Please refresh.';
+        }
+    }
+
+    function renderOrders(orders) {
+        const list = document.getElementById('ordersList');
+        list.innerHTML = '';
+
+        orders.forEach(order => {
+            const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
+            const itemSummary = order.items.slice(0, 2).map(i =>
+                `${i.quantity}× ${i.name}`
+            ).join(', ') + (order.items.length > 2 ? ` +${order.items.length - 2} more` : '');
+
+            const card = document.createElement('div');
+            card.className = 'order-card p-5 transition-colors cursor-pointer';
+            card.innerHTML = `
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-3 mb-2 flex-wrap">
+                            <span class="font-serif text-cream text-lg">${order.orderNumber}</span>
+                            <span class="status-badge ${statusClass(order.status)}">${order.status}</span>
+                            <span class="text-cream/30 text-xs uppercase tracking-wider">${order.orderType}</span>
+                        </div>
+                        <p class="text-cream/50 text-xs truncate">${itemSummary}</p>
+                        <p class="text-cream/30 text-xs mt-1">${formatDate(order.createdAt)}</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <p class="text-gold font-medium text-sm">${formatPrice(order.pricing.total)}</p>
+                        <p class="text-cream/30 text-xs mt-0.5">${itemCount} item${itemCount !== 1 ? 's' : ''}</p>
+                    </div>
+                </div>
+                <!-- Expanded items (hidden by default) -->
+                <div class="order-details hidden mt-4 pt-4 border-t border-white/8">
+                    <div class="space-y-2">
+                        ${order.items.map(item => `
+                            <div class="flex justify-between text-xs">
+                                <span class="text-cream/60">${item.quantity}× ${item.name}${item.customizations && item.customizations.size ? ` <span class="text-cream/30">(${item.customizations.size})</span>` : ''}</span>
+                                <span class="text-cream/50">${formatPrice(item.price * item.quantity)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-white/8 space-y-1">
+                        <div class="flex justify-between text-xs text-cream/40">
+                            <span>Subtotal</span><span>${formatPrice(order.pricing.subtotal)}</span>
+                        </div>
+                        ${order.pricing.deliveryFee > 0 ? `<div class="flex justify-between text-xs text-cream/40"><span>Delivery</span><span>${formatPrice(order.pricing.deliveryFee)}</span></div>` : ''}
+                        ${order.pricing.discount > 0 ? `<div class="flex justify-between text-xs text-green-400"><span>Discount</span><span>-${formatPrice(order.pricing.discount)}</span></div>` : ''}
+                        <div class="flex justify-between text-xs text-cream/40">
+                            <span>Tax</span><span>${formatPrice(order.pricing.tax)}</span>
+                        </div>
+                        ${order.pricing.tip > 0 ? `<div class="flex justify-between text-xs text-cream/40"><span>Tip</span><span>${formatPrice(order.pricing.tip)}</span></div>` : ''}
+                        <div class="flex justify-between text-xs font-medium text-gold mt-1 pt-1 border-t border-white/8">
+                            <span>Total</span><span>${formatPrice(order.pricing.total)}</span>
+                        </div>
+                    </div>
+                    <a href="order-tracking.html?order=${order.orderNumber}" class="inline-block mt-3 text-gold hover:text-gold-light text-xs uppercase tracking-widest transition-colors">Track Order →</a>
+                </div>
+            `;
+
+            // Toggle expanded details on click
+            card.addEventListener('click', () => {
+                const details = card.querySelector('.order-details');
+                details.classList.toggle('hidden');
+            });
+
+            list.appendChild(card);
+        });
+
+        list.classList.remove('hidden');
+    }
+
+    // ----------------------------------------
+    // Update nav account icon state (shared helper so checkout.js can call it)
+    // ----------------------------------------
+    function updateNavIcon() {
+        // If the main page is open in another tab this won't reach it — that's fine.
+        // This is a no-op on the account page itself.
+    }
+
+    // ----------------------------------------
+    // Boot
+    // ----------------------------------------
+    (function init() {
+        const token = getToken();
+        const user  = getUser();
+        if (token && user) {
+            showAccountView(user);
+            loadOrderHistory();
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -70,6 +70,21 @@ async function initStripe() {
 }
 
 // ----------------------------------------
+// Customization summary (mirrors the function in script.js for the cart display)
+// ----------------------------------------
+function getCustomizationSummary(customizations) {
+    if (!customizations) return '';
+    const parts = [];
+    if (customizations.size) parts.push(customizations.size);
+    if (customizations.milk && customizations.milk !== 'None') parts.push(customizations.milk);
+    if (customizations.temperature) parts.push(customizations.temperature);
+    if (customizations.addOns && customizations.addOns.length) {
+        customizations.addOns.forEach(a => parts.push(a));
+    }
+    return parts.join(' · ');
+}
+
+// ----------------------------------------
 // Safe JSON parse (avoids crashing on corrupted localStorage)
 // ----------------------------------------
 function safeJSONParse(str, fallback) {
@@ -122,7 +137,9 @@ function renderCheckout() {
     sidebar?.classList.remove('hidden');
 
     if (checkoutItems) {
-        checkoutItems.innerHTML = cart.map(item => `
+        checkoutItems.innerHTML = cart.map(item => {
+            const customSummary = item.customizations ? getCustomizationSummary(item.customizations) : '';
+            return `
             <div class="order-item">
                 <div class="w-14 h-14 bg-gradient-to-br from-gold/20 to-dark flex items-center justify-center flex-shrink-0">
                     <svg class="w-6 h-6 text-gold/50" fill="currentColor" viewBox="0 0 20 20">
@@ -131,11 +148,12 @@ function renderCheckout() {
                 </div>
                 <div class="flex-1">
                     <h4 class="text-cream text-sm font-medium">${item.name}</h4>
+                    ${customSummary ? `<p class="text-cream/40 text-xs leading-snug mb-0.5">${customSummary}</p>` : ''}
                     <p class="text-cream/40 text-xs">Qty: ${item.quantity}</p>
                 </div>
                 <p class="text-gold text-sm">$${(item.price * item.quantity).toFixed(2)}</p>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     updateTotals();
@@ -194,6 +212,7 @@ function collectOrderData() {
             name: item.name,
             price: item.price,
             quantity: item.quantity,
+            ...(item.customizations ? { customizations: item.customizations } : {}),
         })),
         orderType,
         deliveryAddress: orderType === 'delivery' ? {
@@ -224,6 +243,20 @@ function collectOrderData() {
 document.addEventListener('DOMContentLoaded', function () {
     loadCart();
     initStripe();
+
+    // Pre-fill pickup location from Store Locator selection (if any)
+    try {
+        const savedPickup = sessionStorage.getItem('selectedPickupLocation');
+        if (savedPickup) {
+            const loc = JSON.parse(savedPickup);
+            const nameEl = document.getElementById('pickupLocationName');
+            const addrEl = document.getElementById('pickupLocationAddress');
+            const hoursEl = document.getElementById('pickupLocationHours');
+            if (nameEl && loc.name) nameEl.textContent = loc.name;
+            if (addrEl && loc.address) addrEl.textContent = loc.address;
+            if (hoursEl && loc.hours) hoursEl.textContent = loc.hours;
+        }
+    } catch (_) { }
 
     // Order type toggle
     document.querySelectorAll('input[name="orderType"]').forEach(radio => {
@@ -356,9 +389,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Step 3: Save the order to MongoDB
             btn.textContent = 'Placing order...';
+            const orderHeaders = { 'Content-Type': 'application/json' };
+            const raymahToken = localStorage.getItem('raymahToken');
+            if (raymahToken) orderHeaders['Authorization'] = `Bearer ${raymahToken}`;
             const res = await fetch(`${API_BASE}/orders`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: orderHeaders,
                 body: JSON.stringify(orderData),
             });
 
@@ -373,7 +409,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     : 'Your order will be ready for pickup in approximately 15-20 minutes.';
 
             localStorage.removeItem('raymahCart');
+
+            // Persist order info for the tracking page
+            try {
+                sessionStorage.setItem('lastOrderNumber', data.data.orderNumber);
+                sessionStorage.setItem('lastOrderData', JSON.stringify({
+                    orderNumber: data.data.orderNumber,
+                    firstName: document.getElementById('firstName')?.value.trim() || '',
+                    items: cart.map(item => ({
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity,
+                        customizations: item.customizations || null,
+                    })),
+                    pricing: orderData.pricing,
+                    orderType,
+                }));
+            } catch (_) { }
+
             document.getElementById('confirmationModal').classList.remove('hidden');
+
+            // Wire the Track button to navigate to the tracking page
+            document.getElementById('trackOrderBtn').onclick = () => {
+                window.location.href = `order-tracking.html?order=${data.data.orderNumber}`;
+            };
 
         } catch (err) {
             alert(`Order failed: ${err.message}\n\nPlease check your details and try again.`);
@@ -392,4 +451,123 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('confirmationModal').classList.add('hidden');
         window.location.href = 'index.html';
     });
+
+    // Location picker
+    document.getElementById('changeLocationBtn')?.addEventListener('click', openLocationPicker);
+    document.getElementById('closeLocationPicker')?.addEventListener('click', closeLocationPicker);
+    document.getElementById('locationPickerOverlay')?.addEventListener('click', e => {
+        if (e.target === document.getElementById('locationPickerOverlay')) closeLocationPicker();
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeLocationPicker();
+    });
 });
+
+// ----------------------------------------
+// Location Picker
+// ----------------------------------------
+const CAFE_LOCATIONS = [
+    {
+        id: 1,
+        name: 'Raymah Café Downtown',
+        address: '123 Coffee Lane, Downtown District',
+        hours: 'Mon–Sun  6:00am – 10:00pm',
+        phone: '(555) 100-0001',
+    },
+    {
+        id: 2,
+        name: 'Raymah Café Midtown',
+        address: '456 Brew Avenue, Midtown',
+        hours: 'Mon–Fri  7:00am – 9:00pm · Sat–Sun  8:00am – 8:00pm',
+        phone: '(555) 100-0002',
+    },
+    {
+        id: 3,
+        name: 'Raymah Café East Side',
+        address: '789 Roast Street, East District',
+        hours: 'Mon–Sun  7:00am – 9:00pm',
+        phone: '(555) 100-0003',
+    },
+    {
+        id: 4,
+        name: 'Raymah Café Westgate',
+        address: '321 Bean Boulevard, West End',
+        hours: 'Mon–Sun  6:30am – 10:00pm',
+        phone: '(555) 100-0004',
+    },
+];
+
+function getSelectedLocation() {
+    try { return JSON.parse(sessionStorage.getItem('selectedPickupLocation') || 'null'); } catch { return null; }
+}
+
+function openLocationPicker() {
+    const overlay = document.getElementById('locationPickerOverlay');
+    if (!overlay) return;
+    renderLocationPickerCards();
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLocationPicker() {
+    const overlay = document.getElementById('locationPickerOverlay');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function renderLocationPickerCards() {
+    const list = document.getElementById('locationPickerList');
+    if (!list) return;
+
+    const selected = getSelectedLocation();
+    list.innerHTML = '';
+
+    CAFE_LOCATIONS.forEach(loc => {
+        const isSelected = selected && selected.id === loc.id;
+        const card = document.createElement('div');
+        card.className = `lp-card${isSelected ? ' selected' : ''}`;
+        card.innerHTML = `
+            <div class="lp-card-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+            <div class="lp-card-body">
+                <p class="lp-card-name">${loc.name.replace('Raymah Café ', '')}</p>
+                <p class="lp-card-address">${loc.address}</p>
+                <p class="lp-card-meta">${loc.hours}</p>
+                <p class="lp-card-meta">${loc.phone}</p>
+            </div>
+            <button type="button" class="lp-select-btn${isSelected ? ' selected-btn' : ''}" data-id="${loc.id}">
+                ${isSelected ? '✓ Selected' : 'Select'}
+            </button>
+        `;
+
+        const btn = card.querySelector('.lp-select-btn');
+        if (!isSelected) {
+            btn.addEventListener('click', () => selectPickupLocation(loc));
+        }
+
+        list.appendChild(card);
+    });
+}
+
+function selectPickupLocation(loc) {
+    // Save to sessionStorage
+    sessionStorage.setItem('selectedPickupLocation', JSON.stringify({
+        id: loc.id, name: loc.name, address: loc.address,
+        hours: loc.hours, phone: loc.phone,
+    }));
+
+    // Update the pickup card in the checkout form
+    const nameEl = document.getElementById('pickupLocationName');
+    const addrEl = document.getElementById('pickupLocationAddress');
+    const hoursEl = document.getElementById('pickupLocationHours');
+    if (nameEl) nameEl.textContent = loc.name;
+    if (addrEl) addrEl.textContent = loc.address;
+    if (hoursEl) hoursEl.textContent = loc.hours;
+
+    closeLocationPicker();
+}
