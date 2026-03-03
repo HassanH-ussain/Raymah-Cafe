@@ -198,7 +198,7 @@
         </div>
 
         <!-- Error -->
-        <div id="trackError" class="hidden text-center py-24 fade-in">
+        <div id="trackError" class="hidden text-center py-16 fade-in">
             <div style="width:60px;height:60px;border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
                 <svg style="width:28px;height:28px;color:rgba(212,175,55,0.35)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -206,8 +206,21 @@
             </div>
             <h2 class="font-serif text-3xl text-cream mb-3">Order Not Found</h2>
             <p id="trackErrorMsg" style="color:rgba(245,240,232,0.4);font-size:0.8rem;margin-bottom:2rem;">We couldn't find that order number. Please check and try again.</p>
+
+            <!-- Manual lookup -->
+            <div style="max-width:360px;margin:0 auto 2rem;">
+                <p style="color:rgba(245,240,232,0.3);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.75rem;">Try another order number</p>
+                <div style="display:flex;gap:0.5rem;">
+                    <input id="manualOrderInput" type="text" placeholder="e.g. RMH-XXXXXX"
+                        style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.2);color:#f5f0e8;font-family:'Montserrat',sans-serif;font-size:0.8rem;padding:0.65rem 0.9rem;outline:none;text-transform:uppercase;letter-spacing:0.05em;"
+                        onfocus="this.style.borderColor='rgba(212,175,55,0.5)'" onblur="this.style.borderColor='rgba(212,175,55,0.2)'">
+                    <button onclick="lookupManualOrder()" style="background:#d4af37;color:#0a0a0a;font-family:'Montserrat',sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;padding:0.65rem 1rem;border:none;cursor:pointer;white-space:nowrap;">Look Up</button>
+                </div>
+            </div>
+
             <div class="flex gap-4 justify-center">
                 <a href="index.html" style="padding:0.75rem 1.5rem;border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;transition:all 0.3s;" onmouseover="this.style.background='#d4af37';this.style.color='#0a0a0a'" onmouseout="this.style.background='';this.style.color='#d4af37'">Back to Home</a>
+                <a href="account.html" style="padding:0.75rem 1.5rem;border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;transition:all 0.3s;" onmouseover="this.style.background='#d4af37';this.style.color='#0a0a0a'" onmouseout="this.style.background='';this.style.color='#d4af37'">My Account</a>
             </div>
         </div>
 
@@ -487,7 +500,14 @@
                 const dot = document.getElementById('pollDot');
                 if (dot) { dot.style.background = '#d4af37'; setTimeout(() => { dot.style.background = 'rgba(212,175,55,0.4)'; }, 600); }
 
-                const res  = await fetch(`${API_BASE}/orders/track/${orderNumber}`);
+                const controller = new AbortController();
+                const timeoutId  = setTimeout(() => controller.abort(), 8000);
+                let res;
+                try {
+                    res = await fetch(`${API_BASE}/orders/track/${orderNumber}`, { signal: controller.signal });
+                } finally {
+                    clearTimeout(timeoutId);
+                }
                 const body = await res.json();
 
                 if (!res.ok || !body.success) {
@@ -509,7 +529,7 @@
                     document.getElementById('trackOrderNumber').textContent = order.orderNumber;
                     const greeting = order.customer?.firstName
                         ? `Hello, ${order.customer.firstName} — here's your live order status`
-                        : 'Here's your live order status';
+                        : "Here's your live order status";
                     document.getElementById('trackGreeting').textContent = greeting;
 
                     // Render items and pricing (prefer live API data, fall back to sessionStorage snapshot)
@@ -551,7 +571,23 @@
                 }
 
             } catch (err) {
+                const isTimeout = err.name === 'AbortError';
                 console.warn('[tracking] Fetch failed:', err.message);
+                // On first load, a network error means we can't show anything useful
+                if (firstLoad) {
+                    // If we already showed session data skeleton, leave it up with a banner
+                    const content = document.getElementById('trackContent');
+                    if (content && !content.classList.contains('hidden')) {
+                        const etaEl = document.getElementById('trackETA');
+                        if (etaEl) etaEl.textContent = isTimeout
+                            ? 'Request timed out — server is starting up. Retrying…'
+                            : 'Could not update status — check your connection.';
+                    } else {
+                        showError(isTimeout
+                            ? 'The server took too long to respond. It may be starting up — please try again in a moment.'
+                            : 'Could not reach the server. Please check your connection and try again.');
+                    }
+                }
             }
         }
 
@@ -597,6 +633,28 @@
         }
 
         /* ══════════════════════════════════════════════════
+           Manual order number lookup (from error screen)
+           ══════════════════════════════════════════════════ */
+        function lookupManualOrder() {
+            const input = document.getElementById('manualOrderInput');
+            const val = (input?.value || '').trim().toUpperCase();
+            if (!val) { input?.focus(); return; }
+            // Reset state and re-run with the new order number
+            stopPolling();
+            currentStatus = null;
+            orderNumber = val;
+            hide('trackError');
+            hide('trackContent');
+            show('trackLoading');
+            fetchOrderStatus(true).then(() => startPolling());
+        }
+
+        // Allow Enter key in the manual input (DOM already ready — script is at end of <body>)
+        document.getElementById('manualOrderInput')?.addEventListener('keydown', e => {
+            if (e.key === 'Enter') lookupManualOrder();
+        });
+
+        /* ══════════════════════════════════════════════════
            Kickoff
            ══════════════════════════════════════════════════ */
         orderNumber = resolveOrderNumber();
@@ -610,7 +668,7 @@
                 document.getElementById('trackOrderNumber').textContent = sessionData.orderNumber;
                 if (sessionData.firstName) {
                     document.getElementById('trackGreeting').textContent =
-                        `Hello, ${sessionData.firstName} — here's your live order status`;
+                        `Hello, ${sessionData.firstName} — here\'s your live order status`;
                 }
                 renderReceiptItems(sessionData.items || []);
                 renderPricing(sessionData.pricing || null);
